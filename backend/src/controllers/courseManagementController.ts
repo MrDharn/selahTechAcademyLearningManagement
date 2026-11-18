@@ -12,7 +12,6 @@ const createCourseRequestSchema = z.object({
   title: z.string().trim().min(3),
   description: z.string().trim().min(10),
   priceInKobo: z.number().int().min(0),
-  thumbnailImageUrl: z.string().url().nullable().optional(),
 });
 
 const updateCourseRequestSchema = createCourseRequestSchema
@@ -54,6 +53,7 @@ export const listCoursesManagedByCurrentUser = asyncRequestHandler(async (reques
       title: course.title,
       priceInKobo: course.priceInKobo,
       isPublished: course.isPublished,
+      thumbnailImageUrl: course.thumbnailImageUrl,
       instructorFullName: course.instructorUser.fullName,
       moduleCount: course._count.courseModules,
       enrolledStudentCount: course._count.enrollments,

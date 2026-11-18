@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { CourseThumbnail } from '../components/CourseThumbnail';
 import { LoadingIndicator } from '../components/LoadingIndicator';
 import { StatusMessage } from '../components/StatusMessage';
 import { useAuthentication } from '../context/AuthenticationContext';
@@ -82,6 +83,7 @@ export function InstructorDashboardPage() {
       <div className="course-grid">
         {managedCourses?.map((course) => (
           <Link key={course.courseId} to={`/instructor/courses/${course.courseId}`} className="card course-card">
+            <CourseThumbnail courseTitle={course.title} thumbnailImageUrl={course.thumbnailImageUrl} />
             <div className="course-card__body">
               <div className="row-spaced">
                 <h3>{course.title}</h3>

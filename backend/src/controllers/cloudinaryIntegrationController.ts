@@ -2,10 +2,13 @@ import { z } from 'zod';
 import { prismaDatabaseClient } from '../database/prismaDatabaseClient';
 import {
   assertCloudinaryCredentialsAreValid,
+  createSignedCourseThumbnailUploadParameters,
   createSignedVideoUploadParameters,
   getInstructorCloudinaryCredentials,
+  isImageUrlHostedOnCloudinaryAccount,
 } from '../services/cloudinaryMultiAccountService';
-import { assertUserCanManageLesson } from '../services/courseOwnershipService';
+import { assertUserCanManageCourse, assertUserCanManageLesson } from '../services/courseOwnershipService';
+import { ApplicationError } from '../utilities/ApplicationError';
 import { asyncRequestHandler } from '../utilities/asyncRequestHandler';
 import { encryptSensitiveText } from '../utilities/credentialEncryptionUtilities';
 
@@ -19,6 +22,8 @@ const attachUploadedVideoRequestSchema = z.object({
   cloudinaryVideoPublicId: z.string().trim().min(1),
   videoDurationInSeconds: z.number().int().min(0).nullable().optional(),
 });
+
+const saveCourseThumbnailRequestSchema = z.object({ thumbnailImageUrl: z.string().url() });
 
 /** Never returns the API secret - only whether an account is connected and which one. */
 export const getMyCloudinaryAccountSummary = asyncRequestHandler(async (request, response) => {
@@ -82,4 +87,33 @@ export const attachUploadedVideoToLesson = asyncRequestHandler(async (request, r
   });
 
   response.json({ lesson: updatedLesson });
+});
+
+/** Cover image for a course: the instructor picks a file, the browser uploads it to THEIR Cloudinary with this signed ticket. */
+export const createCourseThumbnailUploadSignature = asyncRequestHandler(async (request, response) => {
+  const courseToReceiveThumbnail = await assertUserCanManageCourse(request.authenticatedUser!, request.params.courseId);
+  const courseOwnerCredentials = await getInstructorCloudinaryCredentials(courseToReceiveThumbnail.instructorUserId);
+
+  response.json(
+    createSignedCourseThumbnailUploadParameters(courseOwnerCredentials, `selahtech-academy/courses/${courseToReceiveThumbnail.id}`),
+  );
+});
+
+export const saveCourseThumbnail = asyncRequestHandler(async (request, response) => {
+  const courseToUpdate = await assertUserCanManageCourse(request.authenticatedUser!, request.params.courseId);
+  const { thumbnailImageUrl } = saveCourseThumbnailRequestSchema.parse(request.body);
+
+  const courseOwnerCredentials = await getInstructorCloudinaryCredentials(courseToUpdate.instructorUserId);
+  if (!isImageUrlHostedOnCloudinaryAccount(thumbnailImageUrl, courseOwnerCredentials.cloudinaryCloudName)) {
+    throw new ApplicationError(400, 'The cover image must be uploaded to your connected Cloudinary account.', 'THUMBNAIL_URL_NOT_ALLOWED');
+  }
+
+  const updatedCourse = await prismaDatabaseClient.course.update({ where: { id: courseToUpdate.id }, data: { thumbnailImageUrl } });
+  response.json({ thumbnailImageUrl: updatedCourse.thumbnailImageUrl });
+});
+
+export const removeCourseThumbnail = asyncRequestHandler(async (request, response) => {
+  const courseToUpdate = await assertUserCanManageCourse(request.authenticatedUser!, request.params.courseId);
+  await prismaDatabaseClient.course.update({ where: { id: courseToUpdate.id }, data: { thumbnailImageUrl: null } });
+  response.status(204).send();
 });

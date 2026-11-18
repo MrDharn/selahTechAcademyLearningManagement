@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { CourseThumbnail } from '../components/CourseThumbnail';
 import { LoadingIndicator } from '../components/LoadingIndicator';
 import { StatusMessage } from '../components/StatusMessage';
 import { useAuthentication } from '../context/AuthenticationContext';
@@ -87,6 +88,7 @@ export function CourseDetailPage() {
   return (
     <div className="page-container course-detail-layout">
       <div>
+        <CourseThumbnail courseTitle={courseDetails.title} thumbnailImageUrl={courseDetails.thumbnailImageUrl} sizeVariant="banner" />
         <h1>{courseDetails.title}</h1>
         <p className="muted-text">Taught by {courseDetails.instructorFullName}</p>
         <p className="course-detail-description">{courseDetails.description}</p>

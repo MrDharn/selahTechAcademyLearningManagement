@@ -72,6 +72,38 @@ export function createSignedVideoUploadParameters(credentials: InstructorCloudin
   };
 }
 
+/**
+ * Course cover images are public (the catalogue is visible before sign-in), so they are stored as ordinary "upload" images
+ * in the course owner's Cloudinary account. Every upload reuses the public_id "thumbnail" and overwrites the previous
+ * image, so replacing a cover never leaves orphaned files behind.
+ */
+export function createSignedCourseThumbnailUploadParameters(credentials: InstructorCloudinaryCredentials, destinationFolderPath: string) {
+  const uploadTimestampInSeconds = Math.round(Date.now() / 1000);
+
+  const parametersIncludedInSignature = {
+    timestamp: uploadTimestampInSeconds,
+    folder: destinationFolderPath,
+    public_id: 'thumbnail',
+    overwrite: 'true',
+    invalidate: 'true',
+    allowed_formats: 'jpg,jpeg,png,webp',
+  };
+
+  const uploadSignature = cloudinaryClient.utils.api_sign_request(parametersIncludedInSignature, credentials.cloudinaryApiSecret);
+
+  return {
+    uploadUrl: `https://api.cloudinary.com/v1_1/${credentials.cloudinaryCloudName}/image/upload`,
+    cloudinaryApiKey: credentials.cloudinaryApiKey,
+    uploadSignature,
+    signedFormFields: parametersIncludedInSignature,
+  };
+}
+
+/** Stops an instructor from saving an arbitrary web address as a cover image: it must live in the course owner's own Cloudinary. */
+export function isImageUrlHostedOnCloudinaryAccount(imageUrl: string, cloudinaryCloudName: string): boolean {
+  return imageUrl.startsWith(`https://res.cloudinary.com/${cloudinaryCloudName}/image/upload/`);
+}
+
 /** Signed HLS (.m3u8) manifest URL for an authenticated video. Only issued after the access guards pass. */
 export function createAuthorizedHlsStreamingUrl(credentials: InstructorCloudinaryCredentials, cloudinaryVideoPublicId: string): string {
   return cloudinaryClient.url(cloudinaryVideoPublicId, {

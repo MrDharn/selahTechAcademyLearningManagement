@@ -6,8 +6,11 @@ import {
 } from '../controllers/assessmentController';
 import {
   attachUploadedVideoToLesson,
+  createCourseThumbnailUploadSignature,
   createLessonVideoUploadSignature,
   getMyCloudinaryAccountSummary,
+  removeCourseThumbnail,
+  saveCourseThumbnail,
   saveMyCloudinaryAccount,
 } from '../controllers/cloudinaryIntegrationController';
 import {
@@ -38,6 +41,11 @@ instructorRoutes.get('/courses', listCoursesManagedByCurrentUser);
 instructorRoutes.post('/courses', createCourse);
 instructorRoutes.get('/courses/:courseId', getCourseForEditing);
 instructorRoutes.patch('/courses/:courseId', updateCourse);
+
+// Course cover image (direct browser -> the course owner's Cloudinary)
+instructorRoutes.post('/courses/:courseId/thumbnail-upload-signature', createCourseThumbnailUploadSignature);
+instructorRoutes.put('/courses/:courseId/thumbnail', saveCourseThumbnail);
+instructorRoutes.delete('/courses/:courseId/thumbnail', removeCourseThumbnail);
 
 // Modules
 instructorRoutes.post('/courses/:courseId/modules', createCourseModule);

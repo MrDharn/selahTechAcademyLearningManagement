@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { AssessmentEditor } from '../components/AssessmentEditor';
+import { CourseThumbnailUploader } from '../components/CourseThumbnailUploader';
 import { LessonVideoUploader } from '../components/LessonVideoUploader';
 import { LoadingIndicator } from '../components/LoadingIndicator';
 import { StatusMessage } from '../components/StatusMessage';
@@ -120,6 +121,12 @@ export function InstructorCourseEditorPage() {
 
       <form className="card form-stack" onSubmit={handleSaveCourseDetails}>
         <h3>Course details</h3>
+        <CourseThumbnailUploader
+          courseId={editableCourse.id}
+          courseTitle={editableCourse.title}
+          currentThumbnailImageUrl={editableCourse.thumbnailImageUrl}
+          onThumbnailChanged={loadCourse}
+        />
         <label className="form-field">
           <span>Title</span>
           <input value={courseTitleDraft} onChange={(changeEvent) => setCourseTitleDraft(changeEvent.target.value)} required />

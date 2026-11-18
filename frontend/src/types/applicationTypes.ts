@@ -205,6 +205,7 @@ export interface ManagedCourseSummary {
   title: string;
   priceInKobo: number;
   isPublished: boolean;
+  thumbnailImageUrl: string | null;
   instructorFullName: string;
   moduleCount: number;
   enrolledStudentCount: number;
@@ -243,6 +244,13 @@ export interface CloudinaryAccountSummary {
   isCloudinaryAccountConnected: boolean;
   cloudinaryCloudName: string | null;
   cloudinaryApiKey: string | null;
+}
+
+export interface SignedImageUploadParameters {
+  uploadUrl: string;
+  cloudinaryApiKey: string;
+  uploadSignature: string;
+  signedFormFields: Record<string, string | number>;
 }
 
 export interface SignedVideoUploadParameters {

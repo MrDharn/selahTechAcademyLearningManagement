@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { CourseThumbnail } from '../components/CourseThumbnail';
 import { LoadingIndicator } from '../components/LoadingIndicator';
 import { ProgressBar } from '../components/ProgressBar';
 import { StatusMessage } from '../components/StatusMessage';
@@ -57,6 +58,7 @@ export function StudentDashboardPage() {
       <div className="course-grid">
         {enrollments?.map((enrollment) => (
           <div key={enrollment.enrollmentId} className="card course-card">
+            <CourseThumbnail courseTitle={enrollment.courseTitle} thumbnailImageUrl={enrollment.thumbnailImageUrl} />
             <div className="course-card__body">
               <div className="row-spaced">
                 <h3>{enrollment.courseTitle}</h3>

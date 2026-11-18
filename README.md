@@ -79,6 +79,10 @@ When you are ready for versioned migrations, run `npx prisma migrate dev --name 
 - **Upgrading.** A scholarship student can pay the full price later. They keep their progress and unlock the remaining modules. A scholarship payment never downgrades a full-price student.
 - **After pulling these changes** run `npx prisma db push` (or rebuild the Docker backend, which does it on start) because the schema gained new columns and the `scholarship_applications` table.
 
+## Course cover images
+
+Each instructor uploads their own cover image per course (course editor -> Course details -> Upload image; JPG/PNG/WebP up to 5 MB). The browser sends it straight to that instructor's Cloudinary account using a signed ticket from the API, and the API only accepts an address inside that same Cloudinary account. Courses without an image get a unique colour tile with the course initials. The instructor must connect their Cloudinary account first (Instructor Studio -> Cloudinary).
+
 ## Paystack webhook
 
 In the Paystack dashboard (Settings, API Keys & Webhooks) set the webhook URL to

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { LoadingIndicator } from '../components/LoadingIndicator';
+import { CourseThumbnail } from '../components/CourseThumbnail';
 import { StatusMessage } from '../components/StatusMessage';
 import { extractErrorMessage, sendApiRequest } from '../services/applicationProgrammingInterfaceClient';
 import type { CourseSummary } from '../types/applicationTypes';
@@ -27,9 +28,7 @@ export function CourseCatalogPage() {
       <div className="course-grid">
         {availableCourses?.map((course) => (
           <Link key={course.courseId} to={`/courses/${course.courseId}`} className="card course-card">
-            <div className="course-card__thumbnail" style={course.thumbnailImageUrl ? { backgroundImage: `url(${course.thumbnailImageUrl})` } : undefined}>
-              {!course.thumbnailImageUrl && <span>🎓</span>}
-            </div>
+            <CourseThumbnail courseTitle={course.title} thumbnailImageUrl={course.thumbnailImageUrl} />
             <div className="course-card__body">
               <h3>{course.title}</h3>
               <p className="muted-text course-card__description">{course.description}</p>
