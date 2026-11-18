@@ -1,5 +1,4 @@
 import { prismaDatabaseClient } from '../database/prismaDatabaseClient';
-import { calculateScholarshipPriceInKobo } from '../services/scholarshipPricingService';
 import { ApplicationError } from '../utilities/ApplicationError';
 import { asyncRequestHandler } from '../utilities/asyncRequestHandler';
 
@@ -10,7 +9,7 @@ export const listPublishedCourses = asyncRequestHandler(async (_request, respons
     orderBy: { createdAt: 'desc' },
     include: {
       instructorUser: { select: { fullName: true } },
-      courseModules: { select: { isIncludedInScholarship: true, _count: { select: { lessons: true } } } },
+      courseModules: { select: { _count: { select: { lessons: true } } } },
     },
   });
 
@@ -20,8 +19,6 @@ export const listPublishedCourses = asyncRequestHandler(async (_request, respons
       title: course.title,
       description: course.description,
       priceInKobo: course.priceInKobo,
-      isScholarshipAvailable: course.isScholarshipAvailable && course.courseModules.some((courseModule) => courseModule.isIncludedInScholarship),
-      scholarshipPriceInKobo: calculateScholarshipPriceInKobo(course.priceInKobo),
       thumbnailImageUrl: course.thumbnailImageUrl,
       instructorFullName: course.instructorUser.fullName,
       moduleCount: course.courseModules.length,
@@ -58,15 +55,11 @@ export const getPublishedCourseDetails = asyncRequestHandler(async (request, res
       title: matchingCourse.title,
       description: matchingCourse.description,
       priceInKobo: matchingCourse.priceInKobo,
-      isScholarshipAvailable:
-        matchingCourse.isScholarshipAvailable && matchingCourse.courseModules.some((courseModule) => courseModule.isIncludedInScholarship),
-      scholarshipPriceInKobo: calculateScholarshipPriceInKobo(matchingCourse.priceInKobo),
       thumbnailImageUrl: matchingCourse.thumbnailImageUrl,
       instructorFullName: matchingCourse.instructorUser.fullName,
       modules: matchingCourse.courseModules.map((courseModule) => ({
         courseModuleId: courseModule.id,
         title: courseModule.title,
-        isIncludedInScholarship: courseModule.isIncludedInScholarship,
         lessons: courseModule.lessons.map((lesson) => ({
           lessonId: lesson.id,
           title: lesson.title,

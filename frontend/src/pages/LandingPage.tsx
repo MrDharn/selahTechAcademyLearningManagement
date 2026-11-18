@@ -87,11 +87,16 @@ function extractInitialsFromName(fullName: string): string {
 
 export function LandingPage() {
   const [scholarshipDiscountPercentage, setScholarshipDiscountPercentage] = useState(DEFAULT_SCHOLARSHIP_DISCOUNT_PERCENTAGE);
+  // The program is not always open, so its call to action only appears while at least one course accepts applications.
+  const [isScholarshipProgramOpen, setIsScholarshipProgramOpen] = useState(false);
 
   useEffect(() => {
     sendApiRequest<ScholarshipProgramResponse>('/scholarship/courses')
-      .then((scholarshipProgram) => setScholarshipDiscountPercentage(scholarshipProgram.scholarshipDiscountPercentage))
-      .catch(() => undefined); // The landing page still works with the default percentage if the API is unreachable.
+      .then((scholarshipProgram) => {
+        setScholarshipDiscountPercentage(scholarshipProgram.scholarshipDiscountPercentage);
+        setIsScholarshipProgramOpen(scholarshipProgram.courses.length > 0);
+      })
+      .catch(() => setIsScholarshipProgramOpen(false));
   }, []);
 
   return (
@@ -190,14 +195,18 @@ export function LandingPage() {
         </address>
       </section>
 
-      {/* Last element of the page, as requested: the scholarship call to action. */}
+      {/* Last element of the page: the scholarship call to action, shown only while the program is open. */}
       <section className="landing-scholarship" id="scholarship">
-        <p className="landing-scholarship__badge">Scholarship Program</p>
-        <h2>Get {scholarshipDiscountPercentage}% off your course</h2>
-        <p>Can’t afford the full price? Apply for our scholarship program and, once approved, learn at {scholarshipDiscountPercentage}% less.</p>
-        <Link to="/scholarship" className="landing-button landing-button--amber">
-          Apply for Scholarship
-        </Link>
+        {isScholarshipProgramOpen && (
+          <>
+            <p className="landing-scholarship__badge">Scholarship Program</p>
+            <h2>Get {scholarshipDiscountPercentage}% off your course</h2>
+            <p>Can’t afford the full price? Apply for our scholarship program and, once approved, learn at {scholarshipDiscountPercentage}% less.</p>
+            <Link to="/scholarship" className="landing-button landing-button--amber">
+              Apply for Scholarship
+            </Link>
+          </>
+        )}
         <p className="landing-scholarship__copyright">Copyright © {new Date().getFullYear()} Selah Tech Academy</p>
       </section>
     </main>

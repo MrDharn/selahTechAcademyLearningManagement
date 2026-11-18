@@ -71,6 +71,7 @@ When you are ready for versioned migrations, run `npx prisma migrate dev --name 
 
 ## Landing page and scholarship program
 
+- **Discount visibility.** The discounted price is never shown publicly: not in the header, the catalogue or on a course page. It appears only on `/scholarship` (reached from the button at the bottom of the landing page) and, to an approved applicant, on that course. That bottom button only shows while at least one course has the scholarship switched on.
 - **Entry point.** `/` is now the SelahTech Academy landing page (`frontend/src/pages/LandingPage.tsx`, styles in `styles/landingPageStyles.css`). The course catalogue moved to `/courses`. The last element of the page is the **Apply for Scholarship** button.
 - **Hero photo.** Put your own photo at `frontend/public/hero-background.jpg`. Until then the hero shows a blue gradient. The blue overlay keeps the text readable on any photo.
 - **Scholarship price.** `SCHOLARSHIP_DISCOUNT_PERCENTAGE` in `.env` (default 50), so approved students pay half the normal price.

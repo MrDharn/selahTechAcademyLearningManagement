@@ -23,8 +23,6 @@ export interface CourseSummary {
   title: string;
   description: string;
   priceInKobo: number;
-  isScholarshipAvailable: boolean;
-  scholarshipPriceInKobo: number;
   thumbnailImageUrl: string | null;
   instructorFullName: string;
   moduleCount: number;
@@ -41,7 +39,6 @@ export interface CourseOutlineLesson {
 export interface CourseOutlineModule {
   courseModuleId: string;
   title: string;
-  isIncludedInScholarship: boolean;
   lessons: CourseOutlineLesson[];
 }
 
@@ -50,8 +47,6 @@ export interface CourseDetails {
   title: string;
   description: string;
   priceInKobo: number;
-  isScholarshipAvailable: boolean;
-  scholarshipPriceInKobo: number;
   thumbnailImageUrl: string | null;
   instructorFullName: string;
   modules: CourseOutlineModule[];

@@ -29,7 +29,6 @@ export function NavigationBar() {
               <a href="#contact">Contact</a>
             </>
           )}
-          {(!currentUser || currentUser.userRole === 'STUDENT') && <NavLink to="/scholarship">Scholarship</NavLink>}
           {currentUser?.userRole === 'STUDENT' && (
             <>
               <NavLink to="/my-learning">My Learning</NavLink>

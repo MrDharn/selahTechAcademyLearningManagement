@@ -36,9 +36,6 @@ export function CourseCatalogPage() {
                 by {course.instructorFullName} · {course.lessonCount} lessons
               </p>
               <p className="course-card__price">{formatKoboAsNaira(course.priceInKobo)}</p>
-              {course.isScholarshipAvailable && course.priceInKobo > 0 && (
-                <p className="course-card__scholarship-note">Scholarship price: {formatKoboAsNaira(course.scholarshipPriceInKobo)}</p>
-              )}
             </div>
           </Link>
         ))}

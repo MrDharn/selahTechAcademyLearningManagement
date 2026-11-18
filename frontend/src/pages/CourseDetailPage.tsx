@@ -80,10 +80,10 @@ export function CourseDetailPage() {
     : studentEnrollmentForCourse
       ? 'Renew access'
       : `Enroll · ${formatKoboAsNaira(courseDetails.priceInKobo)}`;
-  const shouldOfferScholarship =
-    courseDetails.isScholarshipAvailable && courseDetails.priceInKobo > 0 && !isStaffViewer && studentEnrollmentForCourse?.enrollmentType !== 'STANDARD';
+  // The discounted price is never shown to the public. It only appears to a student who applied and was approved,
+  // so a visitor browsing the catalogue only ever sees the normal price.
+  const shouldShowScholarshipStatus = Boolean(myScholarshipApplicationForCourse) && !isStaffViewer && studentEnrollmentForCourse?.enrollmentType !== 'STANDARD';
   const hasApprovedScholarship = myScholarshipApplicationForCourse?.applicationStatus === 'APPROVED';
-  const scholarshipDiscountText = `${formatKoboAsNaira(courseDetails.scholarshipPriceInKobo)} instead of ${formatKoboAsNaira(courseDetails.priceInKobo)}`;
 
   return (
     <div className="page-container course-detail-layout">
@@ -96,10 +96,7 @@ export function CourseDetailPage() {
         <h2>Course content</h2>
         {courseDetails.modules.map((courseModule) => (
           <div key={courseModule.courseModuleId} className="card module-outline">
-            <h3>
-              {courseModule.title}{' '}
-              {courseDetails.isScholarshipAvailable && courseModule.isIncludedInScholarship && <span className="badge badge--scholarship">Scholarship</span>}
-            </h3>
+            <h3>{courseModule.title}</h3>
             <ul className="lesson-outline-list">
               {courseModule.lessons.map((lesson) => (
                 <li key={lesson.lessonId}>
@@ -142,19 +139,16 @@ export function CourseDetailPage() {
         )}
 
         {isScholarshipEnrollment && (
-          <StatusMessage messageKind="info" messageText="You are on the scholarship program, so you can open the sections marked Scholarship. Upgrade to unlock the rest." />
+          <StatusMessage messageKind="info" messageText="You are on the scholarship program, so you can open the sections included in it. Upgrade to the full course to unlock the rest." />
         )}
 
-        {shouldOfferScholarship && (
+        {shouldShowScholarshipStatus && myScholarshipApplicationForCourse && (
           <div className="scholarship-offer-box">
-            <p className="scholarship-offer-box__title">🎓 Scholarship price</p>
-            <p className="scholarship-offer-box__price">{scholarshipDiscountText}</p>
-
-            {!myScholarshipApplicationForCourse && (
-              <Link to={`/scholarship?courseId=${courseDetails.courseId}`} className="button button--secondary button--full-width">
-                Apply for scholarship
-              </Link>
+            <p className="scholarship-offer-box__title">🎓 Your scholarship</p>
+            {hasApprovedScholarship && (
+              <p className="scholarship-offer-box__price">Approved price: {formatKoboAsNaira(myScholarshipApplicationForCourse.scholarshipPriceInKobo)}</p>
             )}
+
             {myScholarshipApplicationForCourse?.applicationStatus === 'PENDING' && (
               <StatusMessage messageKind="info" messageText="Your scholarship application is being reviewed." />
             )}
@@ -168,7 +162,7 @@ export function CourseDetailPage() {
             )}
             {hasApprovedScholarship && (
               <button type="button" className="button button--primary button--full-width" onClick={() => startPayment(true)} disabled={isStartingPayment}>
-                {isScholarshipEnrollment && hasUsableAccess ? 'Renew scholarship access' : `Enroll with scholarship · ${formatKoboAsNaira(courseDetails.scholarshipPriceInKobo)}`}
+                {isScholarshipEnrollment && hasUsableAccess ? 'Renew scholarship access' : `Enroll with scholarship · ${formatKoboAsNaira(myScholarshipApplicationForCourse.scholarshipPriceInKobo)}`}
               </button>
             )}
           </div>
