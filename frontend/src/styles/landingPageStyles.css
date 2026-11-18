@@ -127,5 +127,13 @@ html { scroll-behavior: smooth; }
 }
 @media (max-width: 640px) {
   .landing-section { padding: 3.5rem 1rem; }
-  .navigation-bar--landing .navigation-bar__links { order: 3; width: 100%; flex-wrap: wrap; gap: 0.8rem; }
+}
+
+/* On the landing page the bar floats over the hero; the open mobile menu gets a solid panel so links stay readable. */
+@media (max-width: 980px) {
+  .navigation-bar--landing .navigation-bar__inner { padding: 0.9rem 1rem; }
+  .navigation-bar--landing .navigation-bar__links a { border-bottom: 1px solid rgba(255, 255, 255, 0.12); }
+  .navigation-bar--landing .navigation-bar__links a:hover { border-bottom-color: rgba(255, 255, 255, 0.12); color: #fcd34d; }
+  .navigation-bar--landing.navigation-bar--menu-open { background: var(--color-brand-navy-dark); }
+  .navigation-bar--landing .navigation-bar__menu { background: var(--color-brand-navy-dark); }
 }
