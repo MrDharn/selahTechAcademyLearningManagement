@@ -1,0 +1,56 @@
+services:
+  postgres_database:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_database_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend_api:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    depends_on:
+      postgres_database:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres_database:5432/${POSTGRES_DB}?schema=public
+      JSON_WEB_TOKEN_SECRET: ${JSON_WEB_TOKEN_SECRET}
+      JSON_WEB_TOKEN_EXPIRES_IN: ${JSON_WEB_TOKEN_EXPIRES_IN}
+      CLOUDINARY_CREDENTIALS_ENCRYPTION_KEY: ${CLOUDINARY_CREDENTIALS_ENCRYPTION_KEY}
+      PAYSTACK_SECRET_KEY: ${PAYSTACK_SECRET_KEY}
+      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL}
+      ALLOWED_CORS_ORIGIN: ${FRONTEND_BASE_URL}
+      COURSE_ACCESS_DURATION_IN_MONTHS: ${COURSE_ACCESS_DURATION_IN_MONTHS}
+      COURSE_ACCESS_GRACE_PERIOD_IN_MONTHS: ${COURSE_ACCESS_GRACE_PERIOD_IN_MONTHS}
+      SCHOLARSHIP_DISCOUNT_PERCENTAGE: ${SCHOLARSHIP_DISCOUNT_PERCENTAGE:-50}
+      INITIAL_ADMIN_EMAIL_ADDRESS: ${INITIAL_ADMIN_EMAIL_ADDRESS}
+      INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD}
+      DEMO_ACCOUNT_PASSWORD: ${DEMO_ACCOUNT_PASSWORD}
+    ports:
+      - "4000:4000"
+    command: sh -c "npx prisma db push --skip-generate && node dist/server.js"
+
+  frontend_web_application:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    depends_on:
+      - backend_api
+    ports:
+      - "8080:80"
+
+volumes:
+  postgres_database_data:

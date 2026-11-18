@@ -1,0 +1,287 @@
+export type UserRole = 'STUDENT' | 'INSTRUCTOR' | 'ADMIN';
+export type CourseAccessStatus = 'ACTIVE' | 'GRACE_PERIOD' | 'EXPIRED' | 'NOT_ENROLLED' | 'PRIVILEGED_VIEWER';
+export type PaymentStatus = 'PENDING' | 'SUCCESSFUL' | 'FAILED';
+export type EnrollmentType = 'STANDARD' | 'SCHOLARSHIP';
+export type ScholarshipApplicationStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export interface PublicUser {
+  userId: string;
+  fullName: string;
+  emailAddress: string;
+  userRole: UserRole;
+  isAccountActive: boolean;
+  createdAt: string;
+}
+
+export interface AuthenticationResponse {
+  authenticationToken: string;
+  user: PublicUser;
+}
+
+export interface CourseSummary {
+  courseId: string;
+  title: string;
+  description: string;
+  priceInKobo: number;
+  isScholarshipAvailable: boolean;
+  scholarshipPriceInKobo: number;
+  thumbnailImageUrl: string | null;
+  instructorFullName: string;
+  moduleCount: number;
+  lessonCount: number;
+}
+
+export interface CourseOutlineLesson {
+  lessonId: string;
+  title: string;
+  description: string | null;
+  videoDurationInSeconds: number | null;
+}
+
+export interface CourseOutlineModule {
+  courseModuleId: string;
+  title: string;
+  isIncludedInScholarship: boolean;
+  lessons: CourseOutlineLesson[];
+}
+
+export interface CourseDetails {
+  courseId: string;
+  title: string;
+  description: string;
+  priceInKobo: number;
+  isScholarshipAvailable: boolean;
+  scholarshipPriceInKobo: number;
+  thumbnailImageUrl: string | null;
+  instructorFullName: string;
+  modules: CourseOutlineModule[];
+}
+
+export interface ScholarshipCourseOffer {
+  courseId: string;
+  title: string;
+  description: string;
+  fullPriceInKobo: number;
+  scholarshipPriceInKobo: number;
+  totalModuleCount: number;
+  includedModuleTitles: string[];
+}
+
+export interface ScholarshipProgramResponse {
+  scholarshipDiscountPercentage: number;
+  courses: ScholarshipCourseOffer[];
+}
+
+export interface MyScholarshipApplication {
+  scholarshipApplicationId: string;
+  courseId: string;
+  courseTitle: string;
+  scholarshipPriceInKobo: number;
+  applicationStatus: ScholarshipApplicationStatus;
+  reviewerNote: string | null;
+  submittedAt: string;
+}
+
+export interface AdminScholarshipApplication {
+  scholarshipApplicationId: string;
+  applicantFullName: string;
+  applicantEmailAddress: string;
+  phoneNumber: string;
+  currentOccupation: string;
+  motivationStatement: string;
+  courseTitle: string;
+  applicationStatus: ScholarshipApplicationStatus;
+  reviewerNote: string | null;
+  submittedAt: string;
+  reviewedAt: string | null;
+}
+
+export interface PaymentInitializationResponse {
+  isFreeCourseEnrollmentComplete: boolean;
+  paystackReference: string;
+  paystackAuthorizationUrl?: string;
+}
+
+export interface PaymentFulfillmentResult {
+  paymentStatus: PaymentStatus;
+  courseId: string;
+  accessExpiresAt: string | null;
+  gracePeriodEndsAt: string | null;
+}
+
+export interface EnrollmentSummary {
+  enrollmentId: string;
+  courseId: string;
+  courseTitle: string;
+  courseDescription: string;
+  thumbnailImageUrl: string | null;
+  enrollmentType: EnrollmentType;
+  accessStatus: 'ACTIVE' | 'GRACE_PERIOD' | 'EXPIRED';
+  accessExpiresAt: string;
+  gracePeriodEndsAt: string;
+  completionPercentage: number;
+  completedLessonCount: number;
+  totalLessonCount: number;
+  nextLessonIdToWatch: string | null;
+}
+
+export interface StudentLessonProgress {
+  lessonId: string;
+  lessonTitle: string;
+  courseModuleId: string;
+  courseModuleTitle: string;
+  positionInCourse: number;
+  hasAssessment: boolean;
+  videoDurationInSeconds: number | null;
+  hasUploadedVideo: boolean;
+  isCompleted: boolean;
+  isUnlocked: boolean;
+  lastWatchedPositionInSeconds: number;
+}
+
+export interface CourseProgressResponse {
+  courseTitle: string;
+  courseAccessStatus: CourseAccessStatus;
+  accessExpiresAt: string | null;
+  gracePeriodEndsAt: string | null;
+  progress: {
+    courseId: string;
+    lessons: StudentLessonProgress[];
+    completedLessonCount: number;
+    totalLessonCount: number;
+    completionPercentage: number;
+    isCourseFullyCompleted: boolean;
+  };
+}
+
+export interface LessonStreamResponse {
+  lessonId: string;
+  lessonTitle: string;
+  lessonDescription: string | null;
+  hlsStreamingUrl: string;
+  lastWatchedPositionInSeconds: number;
+  isLessonCompleted: boolean;
+  courseAccessStatus: CourseAccessStatus;
+  accessExpiresAt: string | null;
+  gracePeriodEndsAt: string | null;
+}
+
+export interface StudentAssessmentQuestion {
+  assessmentQuestionId: string;
+  questionText: string;
+  answerOptions: { answerOptionId: string; optionText: string }[];
+}
+
+export interface StudentAssessmentResponse {
+  assessment: {
+    assessmentId: string;
+    title: string;
+    passMarkPercentage: number;
+    questions: StudentAssessmentQuestion[];
+  };
+  previousAttempts: { scorePercentage: number; hasPassed: boolean; submittedAt: string }[];
+}
+
+export interface AssessmentSubmissionResult {
+  scorePercentage: number;
+  hasPassed: boolean;
+  passMarkPercentage: number;
+  correctAnswerCount: number;
+  totalQuestionCount: number;
+  completionPercentage: number;
+  isCertificateIssued: boolean;
+}
+
+export interface CertificateSummary {
+  certificateId: string;
+  courseId: string;
+  courseTitle: string;
+  certificateNumber: string;
+  issuedAt: string;
+}
+
+export interface ManagedCourseSummary {
+  courseId: string;
+  title: string;
+  priceInKobo: number;
+  isPublished: boolean;
+  instructorFullName: string;
+  moduleCount: number;
+  enrolledStudentCount: number;
+}
+
+export interface EditableLesson {
+  id: string;
+  title: string;
+  description: string | null;
+  sequenceOrderNumber: number;
+  cloudinaryVideoPublicId: string | null;
+  videoDurationInSeconds: number | null;
+  assessment: { id: string; title: string; passMarkPercentage: number } | null;
+}
+
+export interface EditableCourseModule {
+  id: string;
+  title: string;
+  isIncludedInScholarship: boolean;
+  sequenceOrderNumber: number;
+  lessons: EditableLesson[];
+}
+
+export interface EditableCourse {
+  id: string;
+  title: string;
+  description: string;
+  priceInKobo: number;
+  thumbnailImageUrl: string | null;
+  isPublished: boolean;
+  isScholarshipAvailable: boolean;
+  courseModules: EditableCourseModule[];
+}
+
+export interface CloudinaryAccountSummary {
+  isCloudinaryAccountConnected: boolean;
+  cloudinaryCloudName: string | null;
+  cloudinaryApiKey: string | null;
+}
+
+export interface SignedVideoUploadParameters {
+  uploadUrl: string;
+  cloudinaryApiKey: string;
+  uploadSignature: string;
+  signedFormFields: Record<string, string | number>;
+}
+
+export interface InstructorAssessmentDefinition {
+  id: string;
+  title: string;
+  passMarkPercentage: number;
+  questions: {
+    id: string;
+    questionText: string;
+    answerOptions: { id: string; optionText: string; isCorrectOption: boolean }[];
+  }[];
+}
+
+export interface PlatformStatistics {
+  studentCount: number;
+  instructorCount: number;
+  administratorCount: number;
+  courseCount: number;
+  publishedCourseCount: number;
+  enrollmentCount: number;
+  totalRevenueInKobo: number;
+}
+
+export interface AdminPaymentRecord {
+  paymentId: string;
+  studentFullName: string;
+  studentEmailAddress: string;
+  courseTitle: string;
+  paystackReference: string;
+  amountInKobo: number;
+  isScholarshipPayment: boolean;
+  paymentStatus: PaymentStatus;
+  paidAt: string | null;
+  createdAt: string;
+}
