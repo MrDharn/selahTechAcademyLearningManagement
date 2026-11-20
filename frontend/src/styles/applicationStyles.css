@@ -96,15 +96,28 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--color-brand
 .badge--danger { background: var(--color-danger-soft); color: var(--color-danger); }
 .badge--neutral { background: var(--color-brand-blue-soft); color: var(--color-brand-navy); }
 
-.status-message { padding: 0.75rem 1rem; border-radius: var(--radius-medium); margin: 0.75rem 0; font-size: 0.93rem; }
+.status-message {
+  position: relative; display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; overflow: hidden;
+  padding: 0.75rem 1rem; border-radius: var(--radius-medium); margin: 0.75rem 0; font-size: 0.93rem;
+  /* Fades out during its last half second, right before React removes it. */
+  animation: status-message-fade-out 0.5s ease forwards; animation-delay: calc(var(--status-message-duration, 8000ms) - 0.5s);
+}
+.status-message__text { flex: 1; }
+.status-message__close-button { background: transparent; border: none; color: inherit; font-size: 1.35rem; line-height: 1; cursor: pointer; padding: 0 0.15rem; opacity: 0.7; }
+.status-message__close-button:hover, .status-message__close-button:focus-visible { opacity: 1; }
+/* A thin bar shows how long the message has left. */
+.status-message::after {
+  content: ''; position: absolute; left: 0; bottom: 0; height: 3px; width: 100%; background: currentColor; opacity: 0.35; transform-origin: left;
+  animation: status-message-countdown var(--status-message-duration, 8000ms) linear forwards;
+}
+@keyframes status-message-fade-out { to { opacity: 0; } }
+@keyframes status-message-countdown { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 .status-message--error { background: var(--color-danger-soft); color: var(--color-danger); }
 .status-message--success { background: var(--color-success-soft); color: var(--color-success); }
 .status-message--warning { background: var(--color-warning-soft); color: var(--color-warning); }
 .status-message--info { background: var(--color-brand-blue-soft); color: var(--color-brand-navy); }
 
 /* ===== Loading, progress ===== */
-.loading-indicator { display: flex; align-items: center; justify-content: center; gap: 0.75rem; padding: 3rem 1rem; color: var(--color-text-muted); }
-.loading-indicator__spinner { width: 22px; height: 22px; border: 3px solid var(--color-border); border-top-color: var(--color-brand-navy); border-radius: 50%; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .progress-bar { height: 8px; background: var(--color-border); border-radius: 999px; overflow: hidden; margin: 0.6rem 0; }
 .progress-bar__fill { height: 100%; background: linear-gradient(90deg, var(--color-brand-navy), #3b82f6); border-radius: 999px; transition: width 0.3s; }
@@ -259,3 +272,52 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--color-brand
 .google-sign-in__button { display: flex; justify-content: center; min-height: 44px; }
 .google-sign-in__divider { display: flex; align-items: center; gap: 0.75rem; margin-top: 1rem; color: var(--color-text-muted); font-size: 0.85rem; }
 .google-sign-in__divider::before, .google-sign-in__divider::after { content: ''; flex: 1; height: 1px; background: var(--color-border); }
+
+/* ===== SelahTech loader ===== */
+.loading-indicator { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.9rem; padding: 3rem 1rem; color: var(--color-text-muted); }
+.loading-indicator--fullscreen { position: fixed; inset: 0; z-index: 100; background: rgba(255, 255, 255, 0.94); padding: 0; }
+.loading-indicator__message { font-size: 0.92rem; }
+.selahtech-loader__mark-wrapper { position: relative; width: 72px; height: 72px; display: grid; place-items: center; }
+.selahtech-loader__ring {
+  position: absolute; inset: 0; border-radius: 50%; animation: spin 1.1s linear infinite;
+  background: conic-gradient(from 0deg, rgba(11, 105, 176, 0) 0%, #0b69b0 85%, #38a3e8 100%);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4px)); mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4px));
+}
+.selahtech-loader__mark {
+  width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; color: #fff; font: 700 1.9rem/1 'Source Serif 4', Georgia, serif;
+  background: linear-gradient(135deg, #072f57, #0b69b0); animation: selahtech-loader-pulse 1.6s ease-in-out infinite;
+}
+.selahtech-loader__wordmark { display: flex; font: 700 1.5rem/1 'Source Serif 4', Georgia, serif; letter-spacing: 0.03em; }
+.selahtech-loader__letter { display: inline-block; color: #072f57; animation: selahtech-loader-bounce 1.2s ease-in-out infinite; }
+.selahtech-loader__letter--accent { color: #0b69b0; }
+@keyframes selahtech-loader-bounce { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-7px); } }
+@keyframes selahtech-loader-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.92); } }
+@media (prefers-reduced-motion: reduce) {
+  .selahtech-loader__ring, .selahtech-loader__mark, .selahtech-loader__letter { animation: none; }
+  .status-message::after { animation: none; display: none; }
+}
+
+/* ===== SelahTech spinner: small variant (buttons, uploads, notices) and light tone (coloured backgrounds) ===== */
+.selahtech-loader__mark-wrapper--small { width: 22px; height: 22px; flex: none; }
+.selahtech-loader__mark-wrapper--small .selahtech-loader__ring {
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px)); mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+  animation-duration: 0.9s;
+}
+.selahtech-loader__mark-wrapper--small .selahtech-loader__mark { width: 15px; height: 15px; font-size: 0.62rem; animation: none; }
+
+.selahtech-loader__mark-wrapper--light .selahtech-loader__ring { background: conic-gradient(from 0deg, rgba(255, 255, 255, 0) 0%, #ffffff 90%, #ffffff 100%); }
+.selahtech-loader__mark-wrapper--light .selahtech-loader__mark { background: #ffffff; color: #072f57; }
+
+.loading-button-content { display: inline-flex; align-items: center; justify-content: center; gap: 0.55rem; }
+.button:disabled { cursor: progress; }
+
+.working-notice {
+  position: fixed; left: 50%; bottom: 1.5rem; transform: translateX(-50%); z-index: 50;
+  display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.6rem 1.1rem; border-radius: 999px;
+  background: var(--color-brand-navy-dark); color: #fff; font-size: 0.9rem; box-shadow: 0 10px 26px rgba(7, 47, 87, 0.35);
+  animation: working-notice-in 0.18s ease both;
+}
+@keyframes working-notice-in { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+.google-sign-in__verifying { display: flex; align-items: center; justify-content: center; gap: 0.6rem; min-height: 44px; color: var(--color-text-muted); font-size: 0.92rem; }
+@media (prefers-reduced-motion: reduce) { .working-notice { animation: none; } }

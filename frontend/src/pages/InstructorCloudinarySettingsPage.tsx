@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
+import { LoadingButtonContent } from '../components/LoadingButtonContent';
 import { StatusMessage } from '../components/StatusMessage';
 import { extractErrorMessage, sendApiRequest } from '../services/applicationProgrammingInterfaceClient';
 import type { CloudinaryAccountSummary } from '../types/applicationTypes';
@@ -72,7 +73,9 @@ export function InstructorCloudinarySettingsPage() {
           <input type="password" value={cloudinaryApiSecret} onChange={(changeEvent) => setCloudinaryApiSecret(changeEvent.target.value)} required autoComplete="off" />
         </label>
         <button type="submit" className="button button--primary" disabled={isSaving}>
-          {isSaving ? 'Verifying with Cloudinary...' : isAlreadyConnected ? 'Update connection' : 'Verify and save'}
+          <LoadingButtonContent isLoading={isSaving} loadingText="Verifying with Cloudinary...">
+            {isAlreadyConnected ? 'Update connection' : 'Verify and save'}
+          </LoadingButtonContent>
         </button>
       </form>
     </div>

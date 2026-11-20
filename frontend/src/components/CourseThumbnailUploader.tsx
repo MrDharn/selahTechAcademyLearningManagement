@@ -2,6 +2,7 @@ import { useState, type ChangeEvent } from 'react';
 import { extractErrorMessage, sendApiRequest } from '../services/applicationProgrammingInterfaceClient';
 import type { SignedImageUploadParameters } from '../types/applicationTypes';
 import { CourseThumbnail } from './CourseThumbnail';
+import { LoadingButtonContent } from './LoadingButtonContent';
 import { StatusMessage } from './StatusMessage';
 
 const MAXIMUM_COVER_IMAGE_SIZE_IN_BYTES = 5 * 1024 * 1024;
@@ -82,7 +83,9 @@ export function CourseThumbnailUploader({ courseId, courseTitle, currentThumbnai
         <p className="muted-text">Shown in the course catalogue and on the course page. JPG, PNG or WebP, up to 5 MB. A wide image (16:9) works best.</p>
         <div className="button-row">
           <label className="button button--secondary button--small">
-            {isUploading ? 'Uploading...' : currentThumbnailImageUrl ? 'Replace image' : 'Upload image'}
+            <LoadingButtonContent isLoading={isUploading} loadingText="Uploading..." spinnerTone="brand">
+              {currentThumbnailImageUrl ? 'Replace image' : 'Upload image'}
+            </LoadingButtonContent>
             <input type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={handleImageFileSelected} disabled={isUploading} />
           </label>
           {currentThumbnailImageUrl && (

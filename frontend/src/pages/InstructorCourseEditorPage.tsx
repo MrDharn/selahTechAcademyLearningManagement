@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { AssessmentEditor } from '../components/AssessmentEditor';
+import { WorkingNotice } from '../components/WorkingNotice';
 import { CourseThumbnailUploader } from '../components/CourseThumbnailUploader';
 import { LessonVideoUploader } from '../components/LessonVideoUploader';
 import { LoadingIndicator } from '../components/LoadingIndicator';
@@ -40,15 +41,20 @@ export function InstructorCourseEditorPage() {
     void loadCourse();
   }, [loadCourse]);
 
+  const [isRunningAction, setIsRunningAction] = useState(false);
+
   const runAction = async (actionToRun: () => Promise<unknown>, successText?: string) => {
     setErrorMessage(null);
     setSuccessMessage(null);
+    setIsRunningAction(true);
     try {
       await actionToRun();
       await loadCourse();
       if (successText) setSuccessMessage(successText);
     } catch (actionError) {
       setErrorMessage(extractErrorMessage(actionError));
+    } finally {
+      setIsRunningAction(false);
     }
   };
 
@@ -105,6 +111,7 @@ export function InstructorCourseEditorPage() {
 
   return (
     <div className="page-container">
+      <WorkingNotice isWorking={isRunningAction} />
       <Link to="/instructor" className="muted-text">
         ← Instructor studio
       </Link>

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { GoogleSignInButton } from '../components/GoogleSignInButton';
+import { LoadingButtonContent } from '../components/LoadingButtonContent';
 import { StatusMessage } from '../components/StatusMessage';
 import { useAuthentication } from '../context/AuthenticationContext';
 import { extractErrorMessage } from '../services/applicationProgrammingInterfaceClient';
@@ -61,7 +62,9 @@ export function LoginPage() {
         </label>
 
         <button type="submit" className="button button--primary button--full-width" disabled={isSubmitting}>
-          {isSubmitting ? 'Signing in...' : 'Sign in'}
+          <LoadingButtonContent isLoading={isSubmitting} loadingText="Signing in...">
+            Sign in
+          </LoadingButtonContent>
         </button>
 
         <p className="muted-text centered-text">

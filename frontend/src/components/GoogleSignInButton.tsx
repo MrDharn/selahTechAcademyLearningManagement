@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuthentication } from '../context/AuthenticationContext';
+import { SelahTechSpinner } from './SelahTechSpinner';
 import { extractErrorMessage, sendApiRequest } from '../services/applicationProgrammingInterfaceClient';
 import type { GoogleSignInConfiguration, PublicUser } from '../types/applicationTypes';
 
@@ -47,6 +48,7 @@ export function GoogleSignInButton({ buttonText, onSignedIn, onError }: GoogleSi
   const { signInWithGoogleIdToken } = useAuthentication();
   const buttonContainerReference = useRef<HTMLDivElement>(null);
   const [isGoogleSignInAvailable, setIsGoogleSignInAvailable] = useState(false);
+  const [isVerifyingWithServer, setIsVerifyingWithServer] = useState(false);
 
   // Keep the latest callbacks without re-initialising Google every render.
   const latestCallbacksReference = useRef({ onSignedIn, onError, signInWithGoogleIdToken });
@@ -70,11 +72,14 @@ export function GoogleSignInButton({ buttonText, onSignedIn, onError }: GoogleSi
               latestCallbacksReference.current.onError('Google did not return a sign-in token. Please try again.');
               return;
             }
+            setIsVerifyingWithServer(true);
             try {
               const signedInUser = await latestCallbacksReference.current.signInWithGoogleIdToken(credentialResponse.credential);
               latestCallbacksReference.current.onSignedIn(signedInUser);
             } catch (googleSignInError) {
               latestCallbacksReference.current.onError(extractErrorMessage(googleSignInError));
+            } finally {
+              setIsVerifyingWithServer(false);
             }
           },
         });
@@ -103,7 +108,13 @@ export function GoogleSignInButton({ buttonText, onSignedIn, onError }: GoogleSi
 
   return (
     <div className="google-sign-in" hidden={!isGoogleSignInAvailable}>
-      <div ref={buttonContainerReference} className="google-sign-in__button" />
+      <div ref={buttonContainerReference} className="google-sign-in__button" hidden={isVerifyingWithServer} />
+      {isVerifyingWithServer && (
+        <div className="google-sign-in__verifying">
+          <SelahTechSpinner spinnerSize="small" />
+          <span>Signing you in with Google...</span>
+        </div>
+      )}
       <div className="google-sign-in__divider">
         <span>or use your e-mail</span>
       </div>

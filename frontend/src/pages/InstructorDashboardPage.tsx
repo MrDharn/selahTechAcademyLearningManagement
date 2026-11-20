@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CourseThumbnail } from '../components/CourseThumbnail';
+import { LoadingButtonContent } from '../components/LoadingButtonContent';
 import { LoadingIndicator } from '../components/LoadingIndicator';
 import { StatusMessage } from '../components/StatusMessage';
 import { useAuthentication } from '../context/AuthenticationContext';
@@ -115,7 +116,9 @@ export function InstructorDashboardPage() {
               <input type="number" min={0} step="0.01" value={newCoursePriceInNaira} onChange={(changeEvent) => setNewCoursePriceInNaira(Number(changeEvent.target.value))} required />
             </label>
             <button type="submit" className="button button--primary" disabled={isCreatingCourse}>
-              {isCreatingCourse ? 'Creating...' : 'Create course'}
+              <LoadingButtonContent isLoading={isCreatingCourse} loadingText="Creating...">
+                Create course
+              </LoadingButtonContent>
             </button>
           </form>
         </>

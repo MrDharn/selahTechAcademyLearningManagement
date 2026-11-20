@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { CourseThumbnail } from '../components/CourseThumbnail';
+import { LoadingButtonContent } from '../components/LoadingButtonContent';
 import { LoadingIndicator } from '../components/LoadingIndicator';
 import { StatusMessage } from '../components/StatusMessage';
 import { useAuthentication } from '../context/AuthenticationContext';
@@ -134,7 +135,9 @@ export function CourseDetailPage() {
 
         {(!hasUsableAccess || studentEnrollmentForCourse?.accessStatus === 'GRACE_PERIOD' || isScholarshipEnrollment) && !isStaffViewer && (
           <button type="button" className="button button--accent button--full-width" onClick={() => startPayment(false)} disabled={isStartingPayment}>
-            {isStartingPayment ? 'Redirecting to Paystack...' : enrollButtonLabel}
+            <LoadingButtonContent isLoading={isStartingPayment} loadingText="Redirecting to Paystack...">
+              {enrollButtonLabel}
+            </LoadingButtonContent>
           </button>
         )}
 
@@ -162,7 +165,9 @@ export function CourseDetailPage() {
             )}
             {hasApprovedScholarship && (
               <button type="button" className="button button--primary button--full-width" onClick={() => startPayment(true)} disabled={isStartingPayment}>
-                {isScholarshipEnrollment && hasUsableAccess ? 'Renew scholarship access' : `Enroll with scholarship · ${formatKoboAsNaira(myScholarshipApplicationForCourse.scholarshipPriceInKobo)}`}
+                <LoadingButtonContent isLoading={isStartingPayment} loadingText="Redirecting to Paystack...">
+                  {isScholarshipEnrollment && hasUsableAccess ? 'Renew scholarship access' : `Enroll with scholarship · ${formatKoboAsNaira(myScholarshipApplicationForCourse.scholarshipPriceInKobo)}`}
+                </LoadingButtonContent>
               </button>
             )}
           </div>

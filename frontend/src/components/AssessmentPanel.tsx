@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { extractErrorMessage, sendApiRequest } from '../services/applicationProgrammingInterfaceClient';
 import type { AssessmentSubmissionResult, StudentAssessmentResponse } from '../types/applicationTypes';
+import { LoadingButtonContent } from './LoadingButtonContent';
 import { StatusMessage } from './StatusMessage';
 
 interface AssessmentPanelProps {
@@ -60,7 +61,9 @@ export function AssessmentPanel({ lessonId, onAssessmentPassed }: AssessmentPane
         <p className="muted-text">Pass the quiz to complete this lesson and unlock the next one.</p>
         <StatusMessage messageKind="error" messageText={errorMessage} />
         <button type="button" className="button button--primary" onClick={handleStartAssessmentClick} disabled={isBusy}>
-          {isBusy ? 'Loading...' : 'Take the quiz'}
+          <LoadingButtonContent isLoading={isBusy} loadingText="Loading quiz...">
+            Take the quiz
+          </LoadingButtonContent>
         </button>
       </div>
     );
@@ -123,7 +126,9 @@ export function AssessmentPanel({ lessonId, onAssessmentPassed }: AssessmentPane
             onClick={handleSubmitAssessment}
             disabled={isBusy || numberOfAnsweredQuestions < totalNumberOfQuestions}
           >
-            {isBusy ? 'Submitting...' : `Submit (${numberOfAnsweredQuestions}/${totalNumberOfQuestions} answered)`}
+            <LoadingButtonContent isLoading={isBusy} loadingText="Submitting...">
+              {`Submit (${numberOfAnsweredQuestions}/${totalNumberOfQuestions} answered)`}
+            </LoadingButtonContent>
           </button>
         </>
       )}

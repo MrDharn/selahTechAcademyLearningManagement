@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { GoogleSignInButton } from '../components/GoogleSignInButton';
+import { LoadingButtonContent } from '../components/LoadingButtonContent';
 import { StatusMessage } from '../components/StatusMessage';
 import { useAuthentication } from '../context/AuthenticationContext';
 import { extractErrorMessage } from '../services/applicationProgrammingInterfaceClient';
@@ -59,7 +60,9 @@ export function RegisterPage() {
         </label>
 
         <button type="submit" className="button button--primary button--full-width" disabled={isSubmitting}>
-          {isSubmitting ? 'Creating account...' : 'Sign up'}
+          <LoadingButtonContent isLoading={isSubmitting} loadingText="Creating account...">
+            Sign up
+          </LoadingButtonContent>
         </button>
 
         <p className="muted-text centered-text">

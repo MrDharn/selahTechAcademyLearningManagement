@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { LoadingButtonContent } from '../components/LoadingButtonContent';
 import { LoadingIndicator } from '../components/LoadingIndicator';
 import { StatusMessage } from '../components/StatusMessage';
 import { extractErrorMessage, sendApiRequest } from '../services/applicationProgrammingInterfaceClient';
@@ -58,8 +59,10 @@ export function PaymentCallbackPage() {
           <>
             <h1>Payment still processing</h1>
             <p className="muted-text">Paystack has not confirmed this payment yet. This can take a minute.</p>
-            <button type="button" className="button button--primary" onClick={() => void verifyPayment()}>
-              Check again
+            <button type="button" className="button button--primary" onClick={() => void verifyPayment()} disabled={isVerifying}>
+              <LoadingButtonContent isLoading={isVerifying} loadingText="Checking...">
+                Check again
+              </LoadingButtonContent>
             </button>
           </>
         )}

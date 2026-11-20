@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { LoadingIndicator } from '../components/LoadingIndicator';
+import { WorkingNotice } from '../components/WorkingNotice';
 import { StatusMessage } from '../components/StatusMessage';
 import { useAuthentication } from '../context/AuthenticationContext';
 import { extractErrorMessage, sendApiRequest } from '../services/applicationProgrammingInterfaceClient';
@@ -45,15 +46,20 @@ export function AdminDashboardPage() {
     void loadAdminData();
   }, [loadAdminData]);
 
+  const [isRunningAdminAction, setIsRunningAdminAction] = useState(false);
+
   const runAdminAction = async (actionToRun: () => Promise<unknown>, successText: string) => {
     setErrorMessage(null);
     setSuccessMessage(null);
+    setIsRunningAdminAction(true);
     try {
       await actionToRun();
       await loadAdminData();
       setSuccessMessage(successText);
     } catch (actionError) {
       setErrorMessage(extractErrorMessage(actionError));
+    } finally {
+      setIsRunningAdminAction(false);
     }
   };
 
@@ -84,6 +90,7 @@ export function AdminDashboardPage() {
 
   return (
     <div className="page-container">
+      <WorkingNotice isWorking={isRunningAdminAction} />
       <h1>Platform administration</h1>
       <StatusMessage messageKind="error" messageText={errorMessage} />
       <StatusMessage messageKind="success" messageText={successMessage} />

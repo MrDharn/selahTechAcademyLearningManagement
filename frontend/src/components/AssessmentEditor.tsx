@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { extractErrorMessage, sendApiRequest } from '../services/applicationProgrammingInterfaceClient';
 import type { InstructorAssessmentDefinition } from '../types/applicationTypes';
+import { LoadingButtonContent } from './LoadingButtonContent';
 import { StatusMessage } from './StatusMessage';
 
 interface DraftAnswerOption {
@@ -35,7 +36,8 @@ export function AssessmentEditor({ lessonId, onAssessmentChanged }: AssessmentEd
   const [hasSavedAssessment, setHasSavedAssessment] = useState(false);
   const [statusKind, setStatusKind] = useState<'error' | 'success'>('success');
   const [statusText, setStatusText] = useState<string | null>(null);
-  const [isBusy, setIsBusy] = useState(false);
+  const [busyActionName, setBusyActionName] = useState<'saving' | 'deleting' | null>(null);
+  const isBusy = busyActionName !== null;
 
   useEffect(() => {
     sendApiRequest<{ assessment: InstructorAssessmentDefinition | null }>(`/instructor/lessons/${lessonId}/assessment`)
@@ -79,7 +81,7 @@ export function AssessmentEditor({ lessonId, onAssessmentChanged }: AssessmentEd
     );
 
   const handleSaveClick = async () => {
-    setIsBusy(true);
+    setBusyActionName('saving');
     setStatusText(null);
     try {
       await sendApiRequest(`/instructor/lessons/${lessonId}/assessment`, {
@@ -94,13 +96,13 @@ export function AssessmentEditor({ lessonId, onAssessmentChanged }: AssessmentEd
       setStatusKind('error');
       setStatusText(extractErrorMessage(saveError));
     } finally {
-      setIsBusy(false);
+      setBusyActionName(null);
     }
   };
 
   const handleDeleteClick = async () => {
     if (!window.confirm('Remove this quiz? Students will then complete the lesson by finishing the video.')) return;
-    setIsBusy(true);
+    setBusyActionName('deleting');
     try {
       await sendApiRequest(`/instructor/lessons/${lessonId}/assessment`, { httpMethod: 'DELETE' });
       setHasSavedAssessment(false);
@@ -112,7 +114,7 @@ export function AssessmentEditor({ lessonId, onAssessmentChanged }: AssessmentEd
       setStatusKind('error');
       setStatusText(extractErrorMessage(deleteError));
     } finally {
-      setIsBusy(false);
+      setBusyActionName(null);
     }
   };
 
@@ -195,11 +197,15 @@ export function AssessmentEditor({ lessonId, onAssessmentChanged }: AssessmentEd
           + Add question
         </button>
         <button type="button" className="button button--primary" onClick={handleSaveClick} disabled={isBusy}>
-          Save quiz
+          <LoadingButtonContent isLoading={busyActionName === 'saving'} loadingText="Saving...">
+            Save quiz
+          </LoadingButtonContent>
         </button>
         {hasSavedAssessment && (
           <button type="button" className="button button--danger" onClick={handleDeleteClick} disabled={isBusy}>
-            Remove quiz
+            <LoadingButtonContent isLoading={busyActionName === 'deleting'} loadingText="Removing...">
+              Remove quiz
+            </LoadingButtonContent>
           </button>
         )}
       </div>

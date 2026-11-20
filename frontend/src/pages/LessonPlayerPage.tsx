@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AssessmentPanel } from '../components/AssessmentPanel';
 import { HlsVideoPlayer } from '../components/HlsVideoPlayer';
+import { LoadingButtonContent } from '../components/LoadingButtonContent';
 import { LoadingIndicator } from '../components/LoadingIndicator';
 import { ProgressBar } from '../components/ProgressBar';
 import { StatusMessage } from '../components/StatusMessage';
@@ -19,6 +20,7 @@ export function LessonPlayerPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | undefined>(undefined);
   const [isLoadingLessonStream, setIsLoadingLessonStream] = useState(false);
+  const [isMarkingLessonComplete, setIsMarkingLessonComplete] = useState(false);
 
   const loadCourseProgress = useCallback(async () => {
     try {
@@ -77,11 +79,14 @@ export function LessonPlayerPage() {
 
   const handleMarkLessonAsCompleted = async () => {
     if (!selectedLessonId) return;
+    setIsMarkingLessonComplete(true);
     try {
       await sendApiRequest(`/learning/lessons/${selectedLessonId}/complete`, { httpMethod: 'POST' });
       await loadCourseProgress();
     } catch (completionError) {
       setErrorMessage(extractErrorMessage(completionError));
+    } finally {
+      setIsMarkingLessonComplete(false);
     }
   };
 
@@ -183,8 +188,10 @@ export function LessonPlayerPage() {
               <AssessmentPanel key={lessonStream.lessonId} lessonId={lessonStream.lessonId} onAssessmentPassed={loadCourseProgress} />
             ) : (
               !selectedLessonProgress.isCompleted && (
-                <button type="button" className="button button--primary" onClick={handleMarkLessonAsCompleted}>
-                  Mark lesson as complete
+                <button type="button" className="button button--primary" onClick={handleMarkLessonAsCompleted} disabled={isMarkingLessonComplete}>
+                  <LoadingButtonContent isLoading={isMarkingLessonComplete} loadingText="Saving...">
+                    Mark lesson as complete
+                  </LoadingButtonContent>
                 </button>
               )
             )}

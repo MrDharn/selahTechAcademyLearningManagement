@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { LoadingIndicator } from '../components/LoadingIndicator';
+import { LoadingButtonContent } from '../components/LoadingButtonContent';
 import { StatusMessage } from '../components/StatusMessage';
 import { downloadAuthenticatedFile, extractErrorMessage, sendApiRequest } from '../services/applicationProgrammingInterfaceClient';
 import type { CertificateSummary } from '../types/applicationTypes';
@@ -16,12 +17,17 @@ export function CertificatesPage() {
       .catch((loadError) => setErrorMessage(extractErrorMessage(loadError)));
   }, []);
 
+  const [courseIdBeingDownloaded, setCourseIdBeingDownloaded] = useState<string | null>(null);
+
   const handleDownloadClick = async (certificate: CertificateSummary) => {
     setErrorMessage(null);
+    setCourseIdBeingDownloaded(certificate.courseId);
     try {
       await downloadAuthenticatedFile(`/learning/certificates/courses/${certificate.courseId}/download`, `${certificate.certificateNumber}.pdf`);
     } catch (downloadError) {
       setErrorMessage(extractErrorMessage(downloadError));
+    } finally {
+      setCourseIdBeingDownloaded(null);
     }
   };
 
@@ -47,8 +53,10 @@ export function CertificatesPage() {
             <h3>{certificate.courseTitle}</h3>
             <p className="muted-text">Issued {formatCalendarDate(certificate.issuedAt)}</p>
             <p className="monospace-text">{certificate.certificateNumber}</p>
-            <button type="button" className="button button--primary" onClick={() => handleDownloadClick(certificate)}>
-              Download PDF
+            <button type="button" className="button button--primary" onClick={() => handleDownloadClick(certificate)} disabled={courseIdBeingDownloaded !== null}>
+              <LoadingButtonContent isLoading={courseIdBeingDownloaded === certificate.courseId} loadingText="Preparing PDF...">
+                Download PDF
+              </LoadingButtonContent>
             </button>
           </div>
         ))}

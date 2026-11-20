@@ -1,6 +1,7 @@
 import { useState, type ChangeEvent } from 'react';
 import { extractErrorMessage, sendApiRequest } from '../services/applicationProgrammingInterfaceClient';
 import type { SignedVideoUploadParameters } from '../types/applicationTypes';
+import { SelahTechSpinner } from './SelahTechSpinner';
 import { StatusMessage } from './StatusMessage';
 
 interface LessonVideoUploaderProps {
@@ -94,7 +95,12 @@ export function LessonVideoUploader({ lessonId, hasExistingVideo, onVideoUploade
         {hasExistingVideo ? 'Replace video' : 'Upload video'}
         <input type="file" accept="video/*" hidden onChange={handleVideoFileSelected} disabled={uploadProgressPercentage !== null} />
       </label>
-      {uploadProgressPercentage !== null && <span className="muted-text">Uploading... {uploadProgressPercentage}%</span>}
+      {uploadProgressPercentage !== null && (
+        <span className="muted-text loading-button-content">
+          <SelahTechSpinner spinnerSize="small" />
+          <span>Uploading... {uploadProgressPercentage}%</span>
+        </span>
+      )}
       <StatusMessage messageKind="error" messageText={errorMessage} />
     </div>
   );

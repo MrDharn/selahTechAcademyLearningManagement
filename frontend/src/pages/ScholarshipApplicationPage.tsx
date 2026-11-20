@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { LoadingButtonContent } from '../components/LoadingButtonContent';
 import { LoadingIndicator } from '../components/LoadingIndicator';
 import { StatusMessage } from '../components/StatusMessage';
 import { useAuthentication } from '../context/AuthenticationContext';
@@ -167,7 +168,9 @@ export function ScholarshipApplicationPage() {
             </label>
 
             <button type="submit" className="button button--primary" disabled={isSubmitting || !selectedCourseId}>
-              {isSubmitting ? 'Sending...' : 'Submit application'}
+              <LoadingButtonContent isLoading={isSubmitting} loadingText="Sending...">
+                Submit application
+              </LoadingButtonContent>
             </button>
           </form>
         )
