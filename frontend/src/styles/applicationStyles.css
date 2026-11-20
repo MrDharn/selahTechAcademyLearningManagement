@@ -276,7 +276,9 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--color-brand
 /* ===== SelahTech loader ===== */
 .loading-indicator { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.9rem; padding: 3rem 1rem; color: var(--color-text-muted); }
 .loading-indicator--fullscreen { position: fixed; inset: 0; z-index: 100; background: rgba(255, 255, 255, 0.94); padding: 0; }
-.loading-indicator__message { font-size: 0.92rem; }
+.loading-indicator--inline { min-height: 55vh; }
+.loading-indicator--section { padding: 2rem 1rem; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .selahtech-loader__mark-wrapper { position: relative; width: 72px; height: 72px; display: grid; place-items: center; }
 .selahtech-loader__ring {
   position: absolute; inset: 0; border-radius: 50%; animation: spin 1.1s linear infinite;
@@ -308,12 +310,14 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--color-brand
 .selahtech-loader__mark-wrapper--light .selahtech-loader__ring { background: conic-gradient(from 0deg, rgba(255, 255, 255, 0) 0%, #ffffff 90%, #ffffff 100%); }
 .selahtech-loader__mark-wrapper--light .selahtech-loader__mark { background: #ffffff; color: #072f57; }
 
-.loading-button-content { display: inline-flex; align-items: center; justify-content: center; gap: 0.55rem; }
+.loading-button-content { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 0.55rem; }
+.loading-button-content__hidden-label { visibility: hidden; }
+.loading-button-content__spinner { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
 .button:disabled { cursor: progress; }
 
 .working-notice {
   position: fixed; left: 50%; bottom: 1.5rem; transform: translateX(-50%); z-index: 50;
-  display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.6rem 1.1rem; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center; padding: 0.7rem; border-radius: 50%;
   background: var(--color-brand-navy-dark); color: #fff; font-size: 0.9rem; box-shadow: 0 10px 26px rgba(7, 47, 87, 0.35);
   animation: working-notice-in 0.18s ease both;
 }

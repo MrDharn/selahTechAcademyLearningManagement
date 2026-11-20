@@ -98,7 +98,7 @@ export function LessonVideoUploader({ lessonId, hasExistingVideo, onVideoUploade
       {uploadProgressPercentage !== null && (
         <span className="muted-text loading-button-content">
           <SelahTechSpinner spinnerSize="small" />
-          <span>Uploading... {uploadProgressPercentage}%</span>
+          <span>{uploadProgressPercentage}%</span>
         </span>
       )}
       <StatusMessage messageKind="error" messageText={errorMessage} />

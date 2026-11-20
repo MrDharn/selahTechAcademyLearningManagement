@@ -112,7 +112,7 @@ export function GoogleSignInButton({ buttonText, onSignedIn, onError }: GoogleSi
       {isVerifyingWithServer && (
         <div className="google-sign-in__verifying">
           <SelahTechSpinner spinnerSize="small" />
-          <span>Signing you in with Google...</span>
+          <span className="visually-hidden">Signing you in with Google</span>
         </div>
       )}
       <div className="google-sign-in__divider">

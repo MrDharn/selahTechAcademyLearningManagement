@@ -2,8 +2,11 @@ import { SelahTechSpinner } from './SelahTechSpinner';
 
 interface LoadingIndicatorProps {
   message?: string;
-  /** "fullscreen" centres the loader over the whole page (used while the app starts or a session is restored). */
-  layoutVariant?: 'inline' | 'fullscreen';
+  /**
+   * "inline" centres the loader in the middle of the page content, "section" fits it inside a small area,
+   * and "fullscreen" covers the whole page (used while the app starts or a session is restored).
+   */
+  layoutVariant?: 'inline' | 'section' | 'fullscreen';
 }
 
 const BRAND_WORDMARK_LETTERS = Array.from('SelahTech');
@@ -27,7 +30,8 @@ export function LoadingIndicator({ message = 'Loading...', layoutVariant = 'inli
         ))}
       </div>
 
-      <span className="loading-indicator__message">{message}</span>
+      {/* The spinner already says "loading", so the words are only for screen readers. */}
+      <span className="visually-hidden">{message}</span>
     </div>
   );
 }

@@ -170,7 +170,7 @@ export function LessonPlayerPage() {
             Renew access
           </Link>
         )}
-        {isLoadingLessonStream && <LoadingIndicator message="Preparing your video..." />}
+        {isLoadingLessonStream && <LoadingIndicator message="Preparing your video" layoutVariant="section" />}
 
         {lessonStream && selectedLessonProgress && (
           <>
