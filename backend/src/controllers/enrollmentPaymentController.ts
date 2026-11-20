@@ -5,6 +5,7 @@ import { buildStudentCourseProgress } from '../services/courseProgressService';
 import { determineCourseAccessStatus, grantOrRenewEnrollment } from '../services/enrollmentAccessService';
 import { fulfillPaymentByPaystackReference } from '../services/paymentFulfillmentService';
 import { calculateScholarshipPriceInKobo } from '../services/scholarshipPricingService';
+import { notifyStudentOfSuccessfulPayment } from '../services/studentNotificationService';
 import { initializePaystackTransaction, isPaystackWebhookSignatureValid } from '../services/paystackPaymentService';
 import { ApplicationError } from '../utilities/ApplicationError';
 import { asyncRequestHandler } from '../utilities/asyncRequestHandler';
@@ -93,6 +94,7 @@ export const initiateCoursePayment = asyncRequestHandler(async (request, respons
         purchasedEnrollmentType: isScholarshipPurchase ? 'SCHOLARSHIP' : 'STANDARD',
       });
     });
+    void notifyStudentOfSuccessfulPayment(paystackReference);
     return response.status(201).json({ isFreeCourseEnrollmentComplete: true, paystackReference });
   }
 

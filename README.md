@@ -84,6 +84,12 @@ When you are ready for versioned migrations, run `npx prisma migrate dev --name 
 
 Each instructor uploads their own cover image per course (course editor -> Course details -> Upload image; JPG/PNG/WebP up to 5 MB). The browser sends it straight to that instructor's Cloudinary account using a signed ticket from the API, and the API only accepts an address inside that same Cloudinary account. Courses without an image get a unique colour tile with the course initials. The instructor must connect their Cloudinary account first (Instructor Studio -> Cloudinary).
 
+## E-mail notifications (nodemailer)
+
+Students get a welcome e-mail after registering and a receipt after a successful payment (also for free and scholarship enrollments). The payment e-mail is sent once per payment, even though both the browser callback and the Paystack webhook can confirm it. Sending never blocks or breaks a registration or payment: failures are only logged.
+
+Set the `SMTP_*` and `EMAIL_SENDER_*` variables in `.env`. Leave `SMTP_HOST` empty to switch e-mail off; the backend then just logs `[email skipped ...]`. For Gmail use an App Password (Google Account -> Security -> 2-Step Verification -> App passwords), not your normal password. For testing without sending real mail, a free Mailtrap or Ethereal inbox works. New dependency: run `npm install` in `backend` (Docker does it on `--build`).
+
 ## Paystack webhook
 
 In the Paystack dashboard (Settings, API Keys & Webhooks) set the webhook URL to

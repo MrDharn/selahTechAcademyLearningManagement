@@ -5,6 +5,7 @@ import { asyncRequestHandler } from '../utilities/asyncRequestHandler';
 import { createAuthenticationToken } from '../utilities/jsonWebTokenUtilities';
 import { doesPlainTextPasswordMatchHash, hashPlainTextPassword } from '../utilities/passwordHashingUtilities';
 import { toPublicUserRepresentation } from '../utilities/publicUserRepresentation';
+import { notifyStudentOfSuccessfulRegistration } from '../services/studentNotificationService';
 
 const studentRegistrationRequestSchema = z.object({
   fullName: z.string().trim().min(2, 'Full name must be at least 2 characters'),
@@ -42,6 +43,9 @@ export const registerStudentAccount = asyncRequestHandler(async (request, respon
     userRole: createdStudentUser.userRole,
     emailAddress: createdStudentUser.emailAddress,
   });
+
+  // Not awaited on purpose: the student should not wait for the mail server, and a mail problem must not undo the registration.
+  void notifyStudentOfSuccessfulRegistration(createdStudentUser);
 
   response.status(201).json({ authenticationToken, user: toPublicUserRepresentation(createdStudentUser) });
 });

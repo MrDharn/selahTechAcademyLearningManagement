@@ -1,6 +1,7 @@
 import { prismaDatabaseClient } from '../database/prismaDatabaseClient';
 import { ApplicationError } from '../utilities/ApplicationError';
 import { grantOrRenewEnrollment } from './enrollmentAccessService';
+import { notifyStudentOfSuccessfulPayment } from './studentNotificationService';
 import { verifyPaystackTransaction } from './paystackPaymentService';
 
 export interface PaymentFulfillmentResult {
@@ -66,6 +67,8 @@ export async function fulfillPaymentByPaystackReference(paystackReference: strin
 
   const paymentCompletedAt = paystackTransaction.paid_at ? new Date(paystackTransaction.paid_at) : new Date();
 
+  let didThisCallCompleteThePayment = false;
+
   await prismaDatabaseClient.$transaction(async (databaseTransactionClient) => {
     const numberOfPaymentsFlippedToSuccessful = await databaseTransactionClient.payment.updateMany({
       where: { id: matchingPayment.id, paymentStatus: 'PENDING' },
@@ -73,6 +76,7 @@ export async function fulfillPaymentByPaystackReference(paystackReference: strin
     });
 
     if (numberOfPaymentsFlippedToSuccessful.count === 1) {
+      didThisCallCompleteThePayment = true;
       await grantOrRenewEnrollment(databaseTransactionClient, {
         studentUserId: matchingPayment.studentUserId,
         courseId: matchingPayment.courseId,
@@ -81,6 +85,9 @@ export async function fulfillPaymentByPaystackReference(paystackReference: strin
       });
     }
   });
+
+  // The browser callback and the Paystack webhook can both arrive; only the call that completed the payment sends the e-mail.
+  if (didThisCallCompleteThePayment) void notifyStudentOfSuccessfulPayment(paystackReference);
 
   const grantedEnrollment = await currentEnrollment();
 

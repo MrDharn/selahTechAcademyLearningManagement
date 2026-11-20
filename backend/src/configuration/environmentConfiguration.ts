@@ -1,6 +1,12 @@
 import 'dotenv/config';
 import { z } from 'zod';
 
+/** docker-compose passes unset variables as empty text, so treat "" as "not provided". */
+const emptyTextToUndefined = z
+  .string()
+  .optional()
+  .transform((providedText) => (providedText && providedText.trim() !== '' ? providedText.trim() : undefined));
+
 const environmentVariablesSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().int().positive().default(4000),
@@ -16,6 +22,14 @@ const environmentVariablesSchema = z.object({
   COURSE_ACCESS_DURATION_IN_MONTHS: z.coerce.number().int().positive().default(3),
   COURSE_ACCESS_GRACE_PERIOD_IN_MONTHS: z.coerce.number().int().nonnegative().default(1),
   SCHOLARSHIP_DISCOUNT_PERCENTAGE: z.coerce.number().int().min(1).max(99).default(50),
+  // E-mail (nodemailer). Leave SMTP_HOST empty to switch e-mail off.
+  SMTP_HOST: emptyTextToUndefined,
+  SMTP_PORT: z.coerce.number().int().positive().default(587),
+  SMTP_SECURE: z.enum(['true', 'false']).default('false'),
+  SMTP_USERNAME: emptyTextToUndefined,
+  SMTP_PASSWORD: emptyTextToUndefined,
+  EMAIL_SENDER_NAME: z.string().min(1).default('Selah Tech Academy'),
+  EMAIL_SENDER_ADDRESS: z.string().email().default('no-reply@selahtechacademy.com.ng'),
 });
 
 const parsedEnvironmentVariables = environmentVariablesSchema.safeParse(process.env);
@@ -41,4 +55,13 @@ export const environmentConfiguration = {
   courseAccessDurationInMonths: validatedEnvironmentVariables.COURSE_ACCESS_DURATION_IN_MONTHS,
   courseAccessGracePeriodInMonths: validatedEnvironmentVariables.COURSE_ACCESS_GRACE_PERIOD_IN_MONTHS,
   scholarshipDiscountPercentage: validatedEnvironmentVariables.SCHOLARSHIP_DISCOUNT_PERCENTAGE,
+  emailDelivery: {
+    smtpHostName: validatedEnvironmentVariables.SMTP_HOST,
+    smtpPortNumber: validatedEnvironmentVariables.SMTP_PORT,
+    isSmtpConnectionSecure: validatedEnvironmentVariables.SMTP_SECURE === 'true',
+    smtpUsername: validatedEnvironmentVariables.SMTP_USERNAME,
+    smtpPassword: validatedEnvironmentVariables.SMTP_PASSWORD,
+    senderName: validatedEnvironmentVariables.EMAIL_SENDER_NAME,
+    senderEmailAddress: validatedEnvironmentVariables.EMAIL_SENDER_ADDRESS,
+  },
 } as const;
