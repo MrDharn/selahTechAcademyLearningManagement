@@ -22,6 +22,8 @@ const environmentVariablesSchema = z.object({
   COURSE_ACCESS_DURATION_IN_MONTHS: z.coerce.number().int().positive().default(3),
   COURSE_ACCESS_GRACE_PERIOD_IN_MONTHS: z.coerce.number().int().nonnegative().default(1),
   SCHOLARSHIP_DISCOUNT_PERCENTAGE: z.coerce.number().int().min(1).max(99).default(50),
+  // Google sign-in: the OAuth "Web application" client ID from Google Cloud Console. Empty = Google sign-in is switched off.
+  GOOGLE_CLIENT_ID: emptyTextToUndefined,
   // E-mail (nodemailer). Leave SMTP_HOST empty to switch e-mail off.
   SMTP_HOST: emptyTextToUndefined,
   SMTP_PORT: z.coerce.number().int().positive().default(587),
@@ -55,6 +57,7 @@ export const environmentConfiguration = {
   courseAccessDurationInMonths: validatedEnvironmentVariables.COURSE_ACCESS_DURATION_IN_MONTHS,
   courseAccessGracePeriodInMonths: validatedEnvironmentVariables.COURSE_ACCESS_GRACE_PERIOD_IN_MONTHS,
   scholarshipDiscountPercentage: validatedEnvironmentVariables.SCHOLARSHIP_DISCOUNT_PERCENTAGE,
+  googleClientId: validatedEnvironmentVariables.GOOGLE_CLIENT_ID,
   emailDelivery: {
     smtpHostName: validatedEnvironmentVariables.SMTP_HOST,
     smtpPortNumber: validatedEnvironmentVariables.SMTP_PORT,

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { getCurrentlySignedInUser, loginUser, registerStudentAccount } from '../controllers/authenticationController';
+import { getCurrentlySignedInUser, getGoogleSignInConfiguration, loginUser, registerStudentAccount, signInWithGoogle } from '../controllers/authenticationController';
 import { requireAuthentication } from '../middleware/authenticationMiddleware';
 
 export const authenticationRoutes = Router();
@@ -16,4 +16,6 @@ const authenticationAttemptRateLimiter = rateLimit({
 
 authenticationRoutes.post('/register', authenticationAttemptRateLimiter, registerStudentAccount);
 authenticationRoutes.post('/login', authenticationAttemptRateLimiter, loginUser);
+authenticationRoutes.get('/google-configuration', getGoogleSignInConfiguration);
+authenticationRoutes.post('/google', authenticationAttemptRateLimiter, signInWithGoogle);
 authenticationRoutes.get('/me', requireAuthentication, getCurrentlySignedInUser);

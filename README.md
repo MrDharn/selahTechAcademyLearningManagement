@@ -90,6 +90,17 @@ Students get a welcome e-mail after registering and a receipt after a successful
 
 Set the `SMTP_*` and `EMAIL_SENDER_*` variables in `.env`. Leave `SMTP_HOST` empty to switch e-mail off; the backend then just logs `[email skipped ...]`. For Gmail use an App Password (Google Account -> Security -> 2-Step Verification -> App passwords), not your normal password. For testing without sending real mail, a free Mailtrap or Ethereal inbox works. New dependency: run `npm install` in `backend` (Docker does it on `--build`).
 
+## Sign in with Google
+
+"Continue with Google" appears on the Sign in and Sign up pages once `GOOGLE_CLIENT_ID` is set in `.env` (leave it empty to hide the button).
+
+1. Google Cloud Console -> create/select a project -> APIs & Services -> OAuth consent screen (External; add your app name and e-mail).
+2. Credentials -> Create credentials -> OAuth client ID -> **Web application**.
+3. Under **Authorized JavaScript origins** add every address the site is served from, e.g. `http://localhost:8080` (Docker), `http://localhost:5173` (Vite dev) and your real domain. No redirect URI is needed.
+4. Copy the client ID into `GOOGLE_CLIENT_ID` and restart the backend. (There is no client secret to store.)
+
+How it behaves: the first Google sign-in creates a STUDENT account (and sends the welcome e-mail). If an account with the same verified e-mail already exists, Google is linked to it, including instructor and admin accounts. The backend verifies Google's token signature, expiry and audience itself, and rejects unverified Google e-mails. Google-only accounts have no password; the password form shows a hint to use the Google button. Schema change: `users.hashedPassword` is now optional and `users.googleSubjectId` was added. Run `npx prisma db push` (Docker does this on start). New dependency: `google-auth-library` (`npm install` in `backend`).
+
 ## Paystack webhook
 
 In the Paystack dashboard (Settings, API Keys & Webhooks) set the webhook URL to

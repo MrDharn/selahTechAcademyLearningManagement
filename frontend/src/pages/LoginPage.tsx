@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { GoogleSignInButton } from '../components/GoogleSignInButton';
 import { StatusMessage } from '../components/StatusMessage';
 import { useAuthentication } from '../context/AuthenticationContext';
 import { extractErrorMessage } from '../services/applicationProgrammingInterfaceClient';
@@ -42,6 +43,12 @@ export function LoginPage() {
         <h1>Welcome back</h1>
         <p className="muted-text">Sign in to continue learning.</p>
         <StatusMessage messageKind="error" messageText={errorMessage} />
+
+        <GoogleSignInButton
+          buttonText="signin_with"
+          onError={setErrorMessage}
+          onSignedIn={(signedInUser) => navigateToPage(redirectPathAfterSignIn ?? DEFAULT_LANDING_PATH_BY_USER_ROLE[signedInUser.userRole], { replace: true })}
+        />
 
         <label className="form-field">
           <span>Email address</span>

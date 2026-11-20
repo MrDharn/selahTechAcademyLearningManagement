@@ -5,6 +5,8 @@ import { asyncRequestHandler } from '../utilities/asyncRequestHandler';
 import { createAuthenticationToken } from '../utilities/jsonWebTokenUtilities';
 import { doesPlainTextPasswordMatchHash, hashPlainTextPassword } from '../utilities/passwordHashingUtilities';
 import { toPublicUserRepresentation } from '../utilities/publicUserRepresentation';
+import { environmentConfiguration } from '../configuration/environmentConfiguration';
+import { verifyGoogleIdentityToken } from '../services/googleAuthenticationService';
 import { notifyStudentOfSuccessfulRegistration } from '../services/studentNotificationService';
 
 const studentRegistrationRequestSchema = z.object({
@@ -55,12 +57,16 @@ export const loginUser = asyncRequestHandler(async (request, response) => {
 
   const matchingUser = await prismaDatabaseClient.user.findUnique({ where: { emailAddress: loginDetails.emailAddress } });
 
-  const isPasswordCorrect = matchingUser
-    ? await doesPlainTextPasswordMatchHash(loginDetails.password, matchingUser.hashedPassword)
-    : false;
+  // A Google-only account has no password hash, so it can never match a typed password.
+  const isPasswordCorrect =
+    matchingUser?.hashedPassword ? await doesPlainTextPasswordMatchHash(loginDetails.password, matchingUser.hashedPassword) : false;
 
   if (!matchingUser || !isPasswordCorrect) {
-    throw new ApplicationError(401, 'Incorrect email address or password.', 'INVALID_CREDENTIALS');
+    throw new ApplicationError(
+      401,
+      'Incorrect email address or password. If you registered with Google, use the "Continue with Google" button.',
+      'INVALID_CREDENTIALS',
+    );
   }
 
   if (!matchingUser.isAccountActive) {
@@ -82,4 +88,65 @@ export const getCurrentlySignedInUser = asyncRequestHandler(async (request, resp
   });
 
   response.json({ user: toPublicUserRepresentation(signedInUser) });
+});
+
+const googleSignInRequestSchema = z.object({ googleIdToken: z.string().min(20) });
+
+/** Lets the frontend know whether to show the Google button, and which client ID to start it with. The client ID is public by design. */
+export const getGoogleSignInConfiguration = asyncRequestHandler(async (_request, response) => {
+  response.json({
+    isGoogleSignInEnabled: Boolean(environmentConfiguration.googleClientId),
+    googleClientId: environmentConfiguration.googleClientId ?? null,
+  });
+});
+
+/**
+ * "Continue with Google": the browser sends the ID token Google gave it; we verify the signature, audience and expiry
+ * with Google's public keys, then sign the person in - creating a STUDENT account the first time, or linking Google to an
+ * existing account that has the same verified e-mail address.
+ */
+export const signInWithGoogle = asyncRequestHandler(async (request, response) => {
+  const { googleIdToken } = googleSignInRequestSchema.parse(request.body);
+  const verifiedGoogleIdentity = await verifyGoogleIdentityToken(googleIdToken);
+
+  let signedInUser = await prismaDatabaseClient.user.findUnique({ where: { googleSubjectId: verifiedGoogleIdentity.googleSubjectId } });
+  let isNewAccount = false;
+
+  if (!signedInUser) {
+    const existingUserWithSameEmailAddress = await prismaDatabaseClient.user.findUnique({
+      where: { emailAddress: verifiedGoogleIdentity.emailAddress },
+    });
+
+    if (existingUserWithSameEmailAddress) {
+      // Google has verified this e-mail address, so it is safe to attach this Google identity to the existing account.
+      signedInUser = await prismaDatabaseClient.user.update({
+        where: { id: existingUserWithSameEmailAddress.id },
+        data: { googleSubjectId: verifiedGoogleIdentity.googleSubjectId },
+      });
+    } else {
+      signedInUser = await prismaDatabaseClient.user.create({
+        data: {
+          fullName: verifiedGoogleIdentity.fullName,
+          emailAddress: verifiedGoogleIdentity.emailAddress,
+          googleSubjectId: verifiedGoogleIdentity.googleSubjectId,
+          userRole: 'STUDENT',
+        },
+      });
+      isNewAccount = true;
+    }
+  }
+
+  if (!signedInUser.isAccountActive) {
+    throw new ApplicationError(403, 'This account has been deactivated. Contact support.', 'ACCOUNT_DEACTIVATED');
+  }
+
+  if (isNewAccount) void notifyStudentOfSuccessfulRegistration(signedInUser);
+
+  const authenticationToken = createAuthenticationToken({
+    userId: signedInUser.id,
+    userRole: signedInUser.userRole,
+    emailAddress: signedInUser.emailAddress,
+  });
+
+  response.status(isNewAccount ? 201 : 200).json({ authenticationToken, user: toPublicUserRepresentation(signedInUser), isNewAccount });
 });

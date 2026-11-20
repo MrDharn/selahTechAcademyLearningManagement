@@ -16,6 +16,12 @@ export interface PublicUser {
 export interface AuthenticationResponse {
   authenticationToken: string;
   user: PublicUser;
+  isNewAccount?: boolean;
+}
+
+export interface GoogleSignInConfiguration {
+  isGoogleSignInEnabled: boolean;
+  googleClientId: string | null;
 }
 
 export interface CourseSummary {

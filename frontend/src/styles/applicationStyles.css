@@ -254,3 +254,8 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--color-brand
 }
 @keyframes navigation-menu-drop { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .navigation-bar--menu-open .navigation-bar__menu { animation: none; } .navigation-bar__menu-toggle-bar { transition: none; } }
+
+/* ===== Google sign-in ===== */
+.google-sign-in__button { display: flex; justify-content: center; min-height: 44px; }
+.google-sign-in__divider { display: flex; align-items: center; gap: 0.75rem; margin-top: 1rem; color: var(--color-text-muted); font-size: 0.85rem; }
+.google-sign-in__divider::before, .google-sign-in__divider::after { content: ''; flex: 1; height: 1px; background: var(--color-border); }

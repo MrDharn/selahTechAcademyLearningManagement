@@ -7,6 +7,7 @@ interface AuthenticationContextValue {
   isRestoringSession: boolean;
   signInWithEmailAndPassword: (emailAddress: string, password: string) => Promise<PublicUser>;
   registerStudent: (fullName: string, emailAddress: string, password: string) => Promise<PublicUser>;
+  signInWithGoogleIdToken: (googleIdToken: string) => Promise<PublicUser>;
   signOut: () => void;
 }
 
@@ -53,14 +54,25 @@ export function AuthenticationProvider({ children }: { children: ReactNode }) {
     [handleSuccessfulAuthentication],
   );
 
+  const signInWithGoogleIdToken = useCallback(
+    async (googleIdToken: string) => {
+      const authenticationResponse = await sendApiRequest<AuthenticationResponse>('/authentication/google', {
+        httpMethod: 'POST',
+        jsonBody: { googleIdToken },
+      });
+      return handleSuccessfulAuthentication(authenticationResponse);
+    },
+    [handleSuccessfulAuthentication],
+  );
+
   const signOut = useCallback(() => {
     storeAuthenticationToken(null);
     setCurrentUser(null);
   }, []);
 
   const contextValue = useMemo(
-    () => ({ currentUser, isRestoringSession, signInWithEmailAndPassword, registerStudent, signOut }),
-    [currentUser, isRestoringSession, signInWithEmailAndPassword, registerStudent, signOut],
+    () => ({ currentUser, isRestoringSession, signInWithEmailAndPassword, registerStudent, signInWithGoogleIdToken, signOut }),
+    [currentUser, isRestoringSession, signInWithEmailAndPassword, registerStudent, signInWithGoogleIdToken, signOut],
   );
 
   return <AuthenticationContext.Provider value={contextValue}>{children}</AuthenticationContext.Provider>;
