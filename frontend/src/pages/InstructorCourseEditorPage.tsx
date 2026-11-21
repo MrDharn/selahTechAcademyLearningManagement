@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AssessmentEditor } from '../components/AssessmentEditor';
 import { WorkingNotice } from '../components/WorkingNotice';
 import { CourseThumbnailUploader } from '../components/CourseThumbnailUploader';
@@ -12,6 +12,7 @@ import { convertNairaToKobo, formatDurationInMinutesAndSeconds } from '../utilit
 
 export function InstructorCourseEditorPage() {
   const { courseId } = useParams();
+  const navigateToPage = useNavigate();
 
   const [editableCourse, setEditableCourse] = useState<EditableCourse | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -76,6 +77,23 @@ export function InstructorCourseEditorPage() {
       editableCourse?.isPublished ? 'Course unpublished.' : 'Course published - students can now enroll.',
     );
 
+  const handleDeleteDraftCourse = async () => {
+    const isDeletionConfirmed = window.confirm(
+      `Delete the draft course "${editableCourse?.title}"? Its modules, lessons and assessments will be removed permanently.`,
+    );
+    if (!isDeletionConfirmed) return;
+
+    setIsRunningAction(true);
+    setErrorMessage(null);
+    try {
+      await sendApiRequest(`/instructor/courses/${courseId}`, { httpMethod: 'DELETE' });
+      navigateToPage('/instructor');
+    } catch (deleteError) {
+      setErrorMessage(extractErrorMessage(deleteError));
+      setIsRunningAction(false);
+    }
+  };
+
   const handleAddModule = (submitEvent: FormEvent) => {
     submitEvent.preventDefault();
     void runAction(async () => {
@@ -118,9 +136,16 @@ export function InstructorCourseEditorPage() {
 
       <div className="row-spaced">
         <h1>{editableCourse.title}</h1>
-        <button type="button" className={`button ${editableCourse.isPublished ? 'button--secondary' : 'button--accent'}`} onClick={handleTogglePublished}>
-          {editableCourse.isPublished ? 'Unpublish' : 'Publish course'}
-        </button>
+        <div className="button-row">
+          {!editableCourse.isPublished && (
+            <button type="button" className="button button--danger" onClick={handleDeleteDraftCourse}>
+              Delete draft
+            </button>
+          )}
+          <button type="button" className={`button ${editableCourse.isPublished ? 'button--secondary' : 'button--accent'}`} onClick={handleTogglePublished}>
+            {editableCourse.isPublished ? 'Unpublish' : 'Publish course'}
+          </button>
+        </div>
       </div>
 
       <StatusMessage messageKind="error" messageText={errorMessage} />

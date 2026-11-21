@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useState, type FormEvent, type MouseEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CourseThumbnail } from '../components/CourseThumbnail';
 import { LoadingButtonContent } from '../components/LoadingButtonContent';
@@ -16,6 +16,8 @@ export function InstructorDashboardPage() {
   const [managedCourses, setManagedCourses] = useState<ManagedCourseSummary[] | null>(null);
   const [cloudinaryAccountSummary, setCloudinaryAccountSummary] = useState<CloudinaryAccountSummary | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [courseIdBeingDeleted, setCourseIdBeingDeleted] = useState<string | null>(null);
 
   const [newCourseTitle, setNewCourseTitle] = useState('');
   const [newCourseDescription, setNewCourseDescription] = useState('');
@@ -55,12 +57,33 @@ export function InstructorDashboardPage() {
     }
   };
 
+  const handleDeleteDraftCourse = async (clickEvent: MouseEvent, course: ManagedCourseSummary) => {
+    // The whole card is a link, so stop the click from opening the course.
+    clickEvent.preventDefault();
+    clickEvent.stopPropagation();
+    if (!window.confirm(`Delete the draft course "${course.title}"? Its modules, lessons and assessments will be removed permanently.`)) return;
+
+    setCourseIdBeingDeleted(course.courseId);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    try {
+      await sendApiRequest(`/instructor/courses/${course.courseId}`, { httpMethod: 'DELETE' });
+      setManagedCourses((currentCourses) => currentCourses?.filter((listedCourse) => listedCourse.courseId !== course.courseId) ?? null);
+      setSuccessMessage('Draft course deleted.');
+    } catch (deleteError) {
+      setErrorMessage(extractErrorMessage(deleteError));
+    } finally {
+      setCourseIdBeingDeleted(null);
+    }
+  };
+
   const isInstructor = currentUser?.userRole === 'INSTRUCTOR';
 
   return (
     <div className="page-container">
       <h1>Instructor studio</h1>
       <StatusMessage messageKind="error" messageText={errorMessage} />
+      <StatusMessage messageKind="success" messageText={successMessage} />
 
       {isInstructor && cloudinaryAccountSummary && (
         <div className="card row-spaced">
@@ -94,6 +117,18 @@ export function InstructorDashboardPage() {
                 {formatKoboAsNaira(course.priceInKobo)} · {course.moduleCount} modules · {course.enrolledStudentCount} students
               </p>
               {currentUser?.userRole === 'ADMIN' && <p className="muted-text">Instructor: {course.instructorFullName}</p>}
+              {!course.isPublished && (
+                <button
+                  type="button"
+                  className="button button--danger button--small"
+                  disabled={courseIdBeingDeleted === course.courseId}
+                  onClick={(clickEvent) => void handleDeleteDraftCourse(clickEvent, course)}
+                >
+                  <LoadingButtonContent isLoading={courseIdBeingDeleted === course.courseId} loadingText="Deleting">
+                    Delete draft
+                  </LoadingButtonContent>
+                </button>
+              )}
             </div>
           </Link>
         ))}

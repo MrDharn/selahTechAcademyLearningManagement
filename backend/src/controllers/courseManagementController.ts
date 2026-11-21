@@ -113,6 +113,34 @@ export const updateCourse = asyncRequestHandler(async (request, response) => {
   response.json({ course: updatedCourse });
 });
 
+/**
+ * Deletes a draft course together with its modules, lessons, assessments and scholarship applications.
+ * Allowed for the course's instructor and for administrators. A published course, or a course that already has
+ * students or payments, is never deleted (unpublish first; student history is kept).
+ */
+export const deleteDraftCourse = asyncRequestHandler(async (request, response) => {
+  const courseToDelete = await assertUserCanManageCourse(request.authenticatedUser!, request.params.courseId);
+
+  if (courseToDelete.isPublished) {
+    throw new ApplicationError(409, 'Only a draft course can be deleted. Unpublish this course first.', 'COURSE_IS_PUBLISHED');
+  }
+
+  const [numberOfEnrollments, numberOfPayments] = await Promise.all([
+    prismaDatabaseClient.enrollment.count({ where: { courseId: courseToDelete.id } }),
+    prismaDatabaseClient.payment.count({ where: { courseId: courseToDelete.id } }),
+  ]);
+  if (numberOfEnrollments > 0 || numberOfPayments > 0) {
+    throw new ApplicationError(
+      409,
+      'This course has students or payment records, so it cannot be deleted. Keep it unpublished instead.',
+      'COURSE_HAS_STUDENT_HISTORY',
+    );
+  }
+
+  await prismaDatabaseClient.course.delete({ where: { id: courseToDelete.id } });
+  response.status(204).send();
+});
+
 export const createCourseModule = asyncRequestHandler(async (request, response) => {
   await assertUserCanManageCourse(request.authenticatedUser!, request.params.courseId);
   const newModuleDetails = createModuleRequestSchema.parse(request.body);

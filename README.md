@@ -136,3 +136,7 @@ GET  /api/scholarship/courses (public)   POST /api/scholarship/applications   GE
 ## Certificate design
 
 The certificate PDF follows the academy's printed certificate (navy and gold frame, "CERTIFICATE OF COMPLETION" banner, gold seal, signature block). The layout is in `backend/src/services/certificatePdfRenderer.ts`; the company name, RC number and signatory are at the top of that file. To use the real emblem and signature, put `certificate-logo.png` and `certificate-signature.png` in `backend/assets/` (see the README there) and rebuild the backend.
+
+## Deleting draft courses
+
+An instructor (own courses) or an admin (any course) can delete a course that is a **draft**: use "Delete draft" on the course card or on the course editor page. Modules, lessons, assessments and scholarship applications go with it. A published course cannot be deleted (unpublish it first), and neither can a course that already has enrollments or payments (the API answers 409). Videos and the cover image already uploaded stay in the instructor's own Cloudinary account.

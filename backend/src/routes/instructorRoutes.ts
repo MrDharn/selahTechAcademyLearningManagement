@@ -18,6 +18,7 @@ import {
   createCourseModule,
   createLesson,
   deleteCourseModule,
+  deleteDraftCourse,
   deleteLesson,
   getCourseForEditing,
   listCoursesManagedByCurrentUser,
@@ -41,6 +42,7 @@ instructorRoutes.get('/courses', listCoursesManagedByCurrentUser);
 instructorRoutes.post('/courses', createCourse);
 instructorRoutes.get('/courses/:courseId', getCourseForEditing);
 instructorRoutes.patch('/courses/:courseId', updateCourse);
+instructorRoutes.delete('/courses/:courseId', deleteDraftCourse);
 
 // Course cover image (direct browser -> the course owner's Cloudinary)
 instructorRoutes.post('/courses/:courseId/thumbnail-upload-signature', createCourseThumbnailUploadSignature);
