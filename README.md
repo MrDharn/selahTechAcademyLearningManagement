@@ -132,3 +132,7 @@ GET  /api/learning/certificates/me | /certificates/courses/:courseId/download
 /api/admin/...       (statistics, users, payments, scholarship-applications)
 GET  /api/scholarship/courses (public)   POST /api/scholarship/applications   GET /api/scholarship/applications/me
 ```
+
+## Certificate design
+
+The certificate PDF follows the academy's printed certificate (navy and gold frame, "CERTIFICATE OF COMPLETION" banner, gold seal, signature block). The layout is in `backend/src/services/certificatePdfRenderer.ts`; the company name, RC number and signatory are at the top of that file. To use the real emblem and signature, put `certificate-logo.png` and `certificate-signature.png` in `backend/assets/` (see the README there) and rebuild the backend.
