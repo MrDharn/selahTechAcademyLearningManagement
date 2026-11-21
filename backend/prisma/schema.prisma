@@ -56,6 +56,7 @@ model User {
   assessmentAttempts          AssessmentAttempt[]
   certificates                Certificate[]
   scholarshipApplications     ScholarshipApplication[]
+  passwordResetTokens         PasswordResetToken[]
 
   @@map("users")
 }
@@ -147,6 +148,9 @@ model Enrollment {
   accessExpiresAt   DateTime
   // End of the grace period after expiry (+1 month by default).
   gracePeriodEndsAt DateTime
+  // Set by the background worker when a reminder e-mail has been sent; cleared again when the student renews.
+  expiryReminderSentAt DateTime?
+  graceReminderSentAt  DateTime?
 
   studentUser User   @relation(fields: [studentUserId], references: [id], onDelete: Cascade)
   course      Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -281,4 +285,20 @@ model ScholarshipApplication {
   @@unique([applicantUserId, courseId])
   @@index([applicationStatus])
   @@map("scholarship_applications")
+}
+
+// One row per "forgot password" request. Only a SHA-256 hash of the token is stored, so a database leak
+// cannot be used to reset anyone's password. A token works once and expires after 1 hour.
+model PasswordResetToken {
+  id          String    @id @default(uuid())
+  userId      String
+  hashedToken String    @unique
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_tokens")
 }

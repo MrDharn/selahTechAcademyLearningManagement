@@ -8,6 +8,8 @@ export interface CertificateDetails {
   courseTitle: string;
   certificateNumber: string;
   issuedAt: Date;
+  /** Public page where anyone can check the certificate; printed at the bottom when given. */
+  verificationPageUrl?: string;
 }
 
 /** Company details printed on every certificate. Change them here if they ever change. */
@@ -182,5 +184,9 @@ export function drawCertificateOfCompletion(document: PDFKit.PDFDocument, certif
 
   // Certificate number, small, so the certificate can be verified.
   document.fillColor('#475569').font('Helvetica').fontSize(8)
-    .text(`Certificate No. ${certificateDetails.certificateNumber}`, 0, pageHeight - 36, { width: pageWidth, align: 'center' });
+    .text(`Certificate No. ${certificateDetails.certificateNumber}`, 0, pageHeight - 44, { width: pageWidth, align: 'center' });
+  if (certificateDetails.verificationPageUrl) {
+    document.fillColor('#475569').font('Helvetica').fontSize(8)
+      .text(`Verify this certificate at ${certificateDetails.verificationPageUrl}`, 0, pageHeight - 33, { width: pageWidth, align: 'center' });
+  }
 }

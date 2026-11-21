@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { adminRoutes } from './adminRoutes';
 import { authenticationRoutes } from './authenticationRoutes';
+import { certificateVerificationRoutes } from './certificateVerificationRoutes';
 import { courseCatalogRoutes } from './courseCatalogRoutes';
 import { enrollmentPaymentRoutes } from './enrollmentPaymentRoutes';
 import { instructorRoutes } from './instructorRoutes';
@@ -15,6 +16,7 @@ applicationRoutes.get('/health', (_request, response) => {
 
 applicationRoutes.use('/authentication', authenticationRoutes);
 applicationRoutes.use('/courses', courseCatalogRoutes);
+applicationRoutes.use('/certificate-verification', certificateVerificationRoutes);
 applicationRoutes.use('/payments', enrollmentPaymentRoutes);
 applicationRoutes.use('/learning', learningRoutes);
 applicationRoutes.use('/scholarship', scholarshipRoutes);

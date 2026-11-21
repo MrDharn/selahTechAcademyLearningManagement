@@ -120,3 +120,59 @@ export function buildPaymentSuccessEmail(details: PaymentEmailDetails): Outgoing
       `\n\nStart learning: ${details.myLearningPageUrl}\n`,
   };
 }
+
+export function buildPasswordResetEmail(details: {
+  recipientEmailAddress: string;
+  fullName: string;
+  passwordResetPageUrl: string;
+  linkValidForMinutes: number;
+}): OutgoingEmail {
+  const bodyHtml = `
+    <p>Hi ${escapeHtml(details.fullName)},</p>
+    <p>We received a request to set a new password for your account. The button below is valid for ${details.linkValidForMinutes} minutes and works once.</p>
+    <p>If you did not ask for this, you can ignore this e-mail. Your password stays the same.</p>`;
+
+  return {
+    recipientEmailAddress: details.recipientEmailAddress,
+    subject: `Reset your ${ACADEMY_NAME} password`,
+    htmlBody: wrapInEmailLayout('Reset your password', bodyHtml, 'Choose a new password', details.passwordResetPageUrl),
+    plainTextBody:
+      `Hi ${details.fullName},\n\nUse this link to choose a new password (valid for ${details.linkValidForMinutes} minutes, works once):\n` +
+      `${details.passwordResetPageUrl}\n\nIf you did not ask for this, ignore this e-mail.\n`,
+  };
+}
+
+export type AccessReminderKind = 'ACCESS_ENDING_SOON' | 'GRACE_PERIOD_ENDING_SOON';
+
+export function buildAccessReminderEmail(details: {
+  recipientEmailAddress: string;
+  studentFullName: string;
+  courseTitle: string;
+  reminderKind: AccessReminderKind;
+  relevantDeadline: Date;
+  renewalPageUrl: string;
+}): OutgoingEmail {
+  const deadlineText = formatCalendarDate(details.relevantDeadline);
+  const isGraceReminder = details.reminderKind === 'GRACE_PERIOD_ENDING_SOON';
+
+  const headingText = isGraceReminder ? 'Last chance to renew' : 'Your course access ends soon';
+  const messageHtml = isGraceReminder
+    ? `<p>Your paid access to <strong>${escapeHtml(details.courseTitle)}</strong> has ended and you are in the grace period, which closes on <strong>${escapeHtml(deadlineText)}</strong>. Renew before then to keep your progress and continue learning.</p>`
+    : `<p>Your access to <strong>${escapeHtml(details.courseTitle)}</strong> ends on <strong>${escapeHtml(deadlineText)}</strong>. Renew now and the extra time is added on top of what you have left, so nothing is lost.</p>`;
+
+  const bodyHtml = `<p>Hi ${escapeHtml(details.studentFullName)},</p>${messageHtml}<p>Your progress and certificates are always kept.</p>`;
+
+  return {
+    recipientEmailAddress: details.recipientEmailAddress,
+    subject: isGraceReminder
+      ? `Last chance to renew: ${details.courseTitle}`
+      : `Your access to ${details.courseTitle} ends on ${deadlineText}`,
+    htmlBody: wrapInEmailLayout(headingText, bodyHtml, 'Renew my access', details.renewalPageUrl),
+    plainTextBody:
+      `Hi ${details.studentFullName},\n\n` +
+      (isGraceReminder
+        ? `Your access to "${details.courseTitle}" has ended and the grace period closes on ${deadlineText}.`
+        : `Your access to "${details.courseTitle}" ends on ${deadlineText}.`) +
+      `\n\nRenew here: ${details.renewalPageUrl}\n`,
+  };
+}

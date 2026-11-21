@@ -60,6 +60,9 @@ export function LoginPage() {
           <span>Password</span>
           <input type="password" value={password} onChange={(changeEvent) => setPassword(changeEvent.target.value)} required autoComplete="current-password" />
         </label>
+        <p className="forgot-password-link">
+          <Link to="/forgot-password">Forgot your password?</Link>
+        </p>
 
         <button type="submit" className="button button--primary button--full-width" disabled={isSubmitting}>
           <LoadingButtonContent isLoading={isSubmitting} loadingText="Signing in...">

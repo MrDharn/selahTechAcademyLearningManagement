@@ -1,3 +1,4 @@
+import { environmentConfiguration } from '../configuration/environmentConfiguration';
 import { prismaDatabaseClient } from '../database/prismaDatabaseClient';
 import { issueCertificateIfStudentHasCompletedCourse, streamCertificatePdfToResponse } from '../services/certificateService';
 import { ApplicationError } from '../utilities/ApplicationError';
@@ -42,7 +43,35 @@ export const downloadCertificatePdf = asyncRequestHandler(async (request, respon
       courseTitle: certifiedCourse.title,
       certificateNumber: issuedCertificate.certificateNumber,
       issuedAt: issuedCertificate.issuedAt,
+      verificationPageUrl: `${environmentConfiguration.frontendBaseUrl}/verify/${issuedCertificate.certificateNumber}`,
     },
     response,
   );
+});
+
+/**
+ * Public (no sign-in): lets an employer confirm a certificate is real. It shares only what is printed on the
+ * certificate (name, course, date), never an e-mail address or any account detail.
+ */
+export const verifyCertificateByNumber = asyncRequestHandler(async (request, response) => {
+  const certificateNumber = request.params.certificateNumber.trim().toUpperCase();
+
+  const matchingCertificate = await prismaDatabaseClient.certificate.findUnique({
+    where: { certificateNumber },
+    include: { studentUser: { select: { fullName: true } }, course: { select: { title: true } } },
+  });
+
+  if (!matchingCertificate) {
+    response.status(404).json({ isCertificateValid: false, errorMessage: 'No certificate with this number was found.', errorCode: 'CERTIFICATE_NOT_FOUND' });
+    return;
+  }
+
+  response.json({
+    isCertificateValid: true,
+    certificateNumber: matchingCertificate.certificateNumber,
+    holderFullName: matchingCertificate.studentUser.fullName,
+    courseTitle: matchingCertificate.course.title,
+    issuedAt: matchingCertificate.issuedAt,
+    issuedBy: 'Selah Tech Academy',
+  });
 });

@@ -62,6 +62,9 @@ export async function grantOrRenewEnrollment(
       enrollmentType: resultingEnrollmentType,
       accessExpiresAt: newAccessExpiresAt,
       gracePeriodEndsAt: newGracePeriodEndsAt,
+      // A renewed enrollment gets fresh reminders for its new dates.
+      expiryReminderSentAt: null,
+      graceReminderSentAt: null,
     },
   });
 }

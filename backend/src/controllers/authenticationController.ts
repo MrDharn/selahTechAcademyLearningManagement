@@ -7,6 +7,7 @@ import { doesPlainTextPasswordMatchHash, hashPlainTextPassword } from '../utilit
 import { toPublicUserRepresentation } from '../utilities/publicUserRepresentation';
 import { environmentConfiguration } from '../configuration/environmentConfiguration';
 import { verifyGoogleIdentityToken } from '../services/googleAuthenticationService';
+import { resetPasswordWithToken, sendPasswordResetLinkIfAccountExists } from '../services/passwordResetService';
 import { notifyStudentOfSuccessfulRegistration } from '../services/studentNotificationService';
 
 const studentRegistrationRequestSchema = z.object({
@@ -18,6 +19,25 @@ const studentRegistrationRequestSchema = z.object({
 const loginRequestSchema = z.object({
   emailAddress: z.string().trim().toLowerCase().email(),
   password: z.string().min(1),
+});
+
+const forgotPasswordRequestSchema = z.object({ emailAddress: z.string().trim().toLowerCase().email('Enter a valid email address') });
+const resetPasswordRequestSchema = z.object({
+  passwordResetToken: z.string().min(20),
+  newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+});
+
+/** Always answers the same way, whether or not the e-mail address is registered. */
+export const requestPasswordResetLink = asyncRequestHandler(async (request, response) => {
+  const { emailAddress } = forgotPasswordRequestSchema.parse(request.body);
+  await sendPasswordResetLinkIfAccountExists(emailAddress);
+  response.json({ message: 'If an account exists for that e-mail address, a reset link is on its way.' });
+});
+
+export const resetPassword = asyncRequestHandler(async (request, response) => {
+  const { passwordResetToken, newPassword } = resetPasswordRequestSchema.parse(request.body);
+  await resetPasswordWithToken(passwordResetToken, newPassword);
+  response.json({ message: 'Your password has been changed. You can now sign in.' });
 });
 
 /** Public sign-up always creates a STUDENT. Instructors are created by an administrator. */

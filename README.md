@@ -140,3 +140,12 @@ The certificate PDF follows the academy's printed certificate (navy and gold fra
 ## Deleting draft courses
 
 An instructor (own courses) or an admin (any course) can delete a course that is a **draft**: use "Delete draft" on the course card or on the course editor page. Modules, lessons, assessments and scholarship applications go with it. A published course cannot be deleted (unpublish it first), and neither can a course that already has enrollments or payments (the API answers 409). Videos and the cover image already uploaded stay in the instructor's own Cloudinary account.
+
+## Forgot password, expiry reminders and certificate verification
+
+- **Forgot password**: "Forgot your password?" on the sign-in page -> e-mail with a one-time link (valid 1 hour) -> `/reset-password`. Only a hash of the token is stored. The page never reveals whether an e-mail address is registered. Google-only accounts can use it to add a password. Needs SMTP (see E-mail notifications); without `SMTP_HOST` the link is not sent.
+- **Background worker** (`backend/src/services/backgroundWorker.ts`): runs inside the API process, first run 20 seconds after start and then every 60 minutes. Jobs: (1) access-expiry reminders, (2) clean-up of old reset tokens. Every job is safe to run twice or on two server copies at once, so the worker can later be moved into its own process or service. No Redis is needed.
+- **Access-expiry reminders**: one e-mail 7 days before paid access ends, and one 7 days before the grace period closes, each with a renew link to the course page. Each is sent once per enrollment; renewing resets them. Skipped (and not marked as sent) when `SMTP_HOST` is empty.
+- **Certificate verification**: public page `/verify` and `/verify/<certificate number>` (no sign-in). It shows only the holder's name, course and date. The certificate PDF now prints "Verify this certificate at <link>" under the certificate number.
+
+These changes add two columns to `enrollments` and a `password_reset_tokens` table: run `npx prisma db push` (Docker does it on start). Nothing is deleted.

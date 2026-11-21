@@ -5,6 +5,7 @@ import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { CertificatesPage } from './pages/CertificatesPage';
 import { CourseCatalogPage } from './pages/CourseCatalogPage';
 import { CourseDetailPage } from './pages/CourseDetailPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { InstructorCloudinarySettingsPage } from './pages/InstructorCloudinarySettingsPage';
 import { InstructorCourseEditorPage } from './pages/InstructorCourseEditorPage';
 import { InstructorDashboardPage } from './pages/InstructorDashboardPage';
@@ -13,8 +14,10 @@ import { LessonPlayerPage } from './pages/LessonPlayerPage';
 import { LoginPage } from './pages/LoginPage';
 import { PaymentCallbackPage } from './pages/PaymentCallbackPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { ScholarshipApplicationPage } from './pages/ScholarshipApplicationPage';
 import { StudentDashboardPage } from './pages/StudentDashboardPage';
+import { VerifyCertificatePage } from './pages/VerifyCertificatePage';
 
 function PageNotFound() {
   return (
@@ -41,6 +44,10 @@ export function App() {
         <Route path="/courses/:courseId" element={<CourseDetailPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/verify" element={<VerifyCertificatePage />} />
+        <Route path="/verify/:certificateNumber" element={<VerifyCertificatePage />} />
 
         {/* Student journey: pay -> learn -> certificate */}
         <Route path="/payment/callback" element={<ProtectedRoute><PaymentCallbackPage /></ProtectedRoute>} />
