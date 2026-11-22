@@ -49,7 +49,7 @@ export const getPlatformStatistics = asyncRequestHandler(async (_request, respon
 
 export const listAllUsers = asyncRequestHandler(async (_request, response) => {
   const allUsers = await prismaDatabaseClient.user.findMany({ orderBy: { createdAt: 'desc' } });
-  response.json({ users: allUsers.map(toPublicUserRepresentation) });
+  response.json({ users: allUsers.map((listedUser) => toPublicUserRepresentation(listedUser, false)) });
 });
 
 export const createUserAccountWithRole = asyncRequestHandler(async (request, response) => {

@@ -43,6 +43,9 @@ model User {
   // Null for accounts created with "Continue with Google": they have no password until (if ever) one is set.
   hashedPassword  String?
   googleSubjectId String?  @unique
+  phoneNumber     String?
+  // Small square JPEG/PNG/WebP (resized in the browser to about 256 px) stored as a data URL, so students need no Cloudinary account.
+  profilePictureDataUrl String?
   userRole        UserRole @default(STUDENT)
   isAccountActive Boolean  @default(true)
   createdAt       DateTime @default(now())

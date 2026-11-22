@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { accountRoutes } from './accountRoutes';
 import { adminRoutes } from './adminRoutes';
 import { authenticationRoutes } from './authenticationRoutes';
 import { certificateVerificationRoutes } from './certificateVerificationRoutes';
@@ -15,6 +16,7 @@ applicationRoutes.get('/health', (_request, response) => {
 });
 
 applicationRoutes.use('/authentication', authenticationRoutes);
+applicationRoutes.use('/account', accountRoutes);
 applicationRoutes.use('/courses', courseCatalogRoutes);
 applicationRoutes.use('/certificate-verification', certificateVerificationRoutes);
 applicationRoutes.use('/payments', enrollmentPaymentRoutes);
