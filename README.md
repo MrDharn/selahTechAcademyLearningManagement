@@ -156,3 +156,15 @@ These changes add two columns to `enrollments` and a `password_reset_tokens` tab
 - **Verify a certificate** (public, no sign-in): `/verify` (for example http://localhost:5173/verify), linked at the bottom of the landing page and on the "My certificates" page. Each certificate also has its own link, `/verify/<certificate number>`, printed on the PDF.
 
 Needs `npx prisma db push` (adds `phoneNumber` and `profilePictureDataUrl` to users).
+
+## Renewal price by progress, and Retake
+
+A student who already has a course pays by how much of it is covered (`backend/src/services/coursePurchaseQuoteService.ts`):
+
+- **Renewal** = half of the part still left: `price x (100 - covered%) / 100 x 0.5`. For a N100,000 course: 0% covered = N50,000, 50% = N25,000, 80% = N10,000, 99% = N500 (rounded to whole naira, never below N1).
+- **100% covered**: the button becomes **Retake course**. Paying restarts the course: lesson progress and quiz attempts are cleared so lessons unlock from the first one again, the earned certificate is kept, and a new access period starts.
+- **Retake price** is `RETAKE_PRICE_AS_PERCENTAGE_OF_COURSE_PRICE` in the same file (default 100 = full price).
+- First purchases and the scholarship-to-full-course upgrade still cost the normal price. A scholarship student renewing is priced the same way from the scholarship price, over the included sections.
+- The course page asks `GET /api/payments/courses/:courseId/quote`, and starting the payment uses the same function, so the price shown is always the price charged.
+
+Needs `npx prisma db push` (adds `payments.paymentKind`).

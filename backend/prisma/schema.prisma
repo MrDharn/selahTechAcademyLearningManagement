@@ -162,6 +162,12 @@ model Enrollment {
   @@map("enrollments")
 }
 
+enum PaymentKind {
+  ENROLLMENT // first purchase of a course (also the upgrade from scholarship to the full course)
+  RENEWAL    // a student who already has the course pays to extend access; price depends on how much is covered
+  RETAKE     // a student who covered 100% restarts the course
+}
+
 model Payment {
   id                  String        @id @default(uuid())
   studentUserId       String
@@ -169,6 +175,7 @@ model Payment {
   paystackReference   String        @unique
   amountInKobo        Int
   isScholarshipPayment Boolean      @default(false)
+  paymentKind         PaymentKind   @default(ENROLLMENT)
   paymentStatus       PaymentStatus @default(PENDING)
   paystackAuthorizationUrl String?
   paidAt              DateTime?

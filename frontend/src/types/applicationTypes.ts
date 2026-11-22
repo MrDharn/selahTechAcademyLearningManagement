@@ -313,3 +313,12 @@ export interface MyAccountResponse {
   hasPassword: boolean;
   enrolledCourses: EnrolledCourseSummary[];
 }
+
+/** What a student would pay right now: first purchase, renewal (by progress) or retake (100% covered). */
+export interface CoursePurchaseQuote {
+  purchaseKind: 'ENROLLMENT' | 'RENEWAL' | 'RETAKE';
+  amountInKobo: number;
+  basePriceInKobo: number;
+  fullCoursePriceInKobo: number;
+  completionPercentage: number | null;
+}

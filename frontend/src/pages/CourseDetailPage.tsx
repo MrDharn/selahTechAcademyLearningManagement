@@ -6,7 +6,7 @@ import { LoadingIndicator } from '../components/LoadingIndicator';
 import { StatusMessage } from '../components/StatusMessage';
 import { useAuthentication } from '../context/AuthenticationContext';
 import { extractErrorMessage, sendApiRequest } from '../services/applicationProgrammingInterfaceClient';
-import type { CourseDetails, EnrollmentSummary, MyScholarshipApplication, PaymentInitializationResponse } from '../types/applicationTypes';
+import type { CourseDetails, CoursePurchaseQuote, EnrollmentSummary, MyScholarshipApplication, PaymentInitializationResponse } from '../types/applicationTypes';
 import { formatCalendarDate, formatDurationInMinutesAndSeconds, formatKoboAsNaira } from '../utilities/formattingUtilities';
 
 export function CourseDetailPage() {
@@ -17,6 +17,8 @@ export function CourseDetailPage() {
   const [courseDetails, setCourseDetails] = useState<CourseDetails | null>(null);
   const [studentEnrollmentForCourse, setStudentEnrollmentForCourse] = useState<EnrollmentSummary | null>(null);
   const [myScholarshipApplicationForCourse, setMyScholarshipApplicationForCourse] = useState<MyScholarshipApplication | null>(null);
+  const [standardPurchaseQuote, setStandardPurchaseQuote] = useState<CoursePurchaseQuote | null>(null);
+  const [scholarshipPurchaseQuote, setScholarshipPurchaseQuote] = useState<CoursePurchaseQuote | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isStartingPayment, setIsStartingPayment] = useState(false);
 
@@ -44,7 +46,29 @@ export function CourseDetailPage() {
       .catch(() => setMyScholarshipApplicationForCourse(null));
   }, [currentUser, courseId]);
 
+  // The price depends on progress for a student who already has the course, so ask the server (it uses the same rule as the payment).
+  useEffect(() => {
+    setStandardPurchaseQuote(null);
+    if (currentUser?.userRole !== 'STUDENT' || !studentEnrollmentForCourse) return;
+    sendApiRequest<CoursePurchaseQuote>(`/payments/courses/${courseId}/quote`)
+      .then(setStandardPurchaseQuote)
+      .catch(() => setStandardPurchaseQuote(null));
+  }, [currentUser, courseId, studentEnrollmentForCourse]);
+
+  useEffect(() => {
+    setScholarshipPurchaseQuote(null);
+    const isApprovedScholarshipEnrollment =
+      studentEnrollmentForCourse?.enrollmentType === 'SCHOLARSHIP' && myScholarshipApplicationForCourse?.applicationStatus === 'APPROVED';
+    if (currentUser?.userRole !== 'STUDENT' || !isApprovedScholarshipEnrollment) return;
+    sendApiRequest<CoursePurchaseQuote>(`/payments/courses/${courseId}/quote?isScholarshipPurchase=true`)
+      .then(setScholarshipPurchaseQuote)
+      .catch(() => setScholarshipPurchaseQuote(null));
+  }, [currentUser, courseId, studentEnrollmentForCourse, myScholarshipApplicationForCourse]);
+
   const startPayment = async (isScholarshipPurchase: boolean) => {
+    const quoteBeingPaid = isScholarshipPurchase ? scholarshipPurchaseQuote : standardPurchaseQuote;
+    if (quoteBeingPaid?.purchaseKind === 'RETAKE' && !window.confirm('Retaking restarts your progress from the first lesson. Your certificate is kept. Continue?')) return;
+
     if (!currentUser) {
       navigateToPage('/login', { state: { redirectPathAfterSignIn: `/courses/${courseId}` } });
       return;
@@ -75,12 +99,30 @@ export function CourseDetailPage() {
 
   const hasUsableAccess = studentEnrollmentForCourse && studentEnrollmentForCourse.accessStatus !== 'EXPIRED';
   const isScholarshipEnrollment = studentEnrollmentForCourse?.enrollmentType === 'SCHOLARSHIP';
+  // The reminder e-mail goes out 7 days before access ends, so the Renew button must already be there (extra time is added on top).
+  const DAYS_BEFORE_EXPIRY_WHEN_RENEWAL_OPENS = 14;
+  const isAccessEndingSoon =
+    studentEnrollmentForCourse?.accessStatus === 'ACTIVE' &&
+    new Date(studentEnrollmentForCourse.accessExpiresAt).getTime() - Date.now() <= DAYS_BEFORE_EXPIRY_WHEN_RENEWAL_OPENS * 24 * 60 * 60 * 1000;
   const isStaffViewer = currentUser?.userRole === 'INSTRUCTOR' || currentUser?.userRole === 'ADMIN';
+  const describePurchaseQuoteAsButtonLabel = (purchaseQuote: CoursePurchaseQuote | null, fallbackLabel: string) =>
+    purchaseQuote?.purchaseKind === 'RETAKE'
+      ? `Retake course · ${formatKoboAsNaira(purchaseQuote.amountInKobo)}`
+      : purchaseQuote?.purchaseKind === 'RENEWAL'
+        ? `Renew access · ${formatKoboAsNaira(purchaseQuote.amountInKobo)}`
+        : fallbackLabel;
+  const describePurchaseQuoteAsExplanation = (purchaseQuote: CoursePurchaseQuote | null) =>
+    purchaseQuote?.purchaseKind === 'RETAKE'
+      ? 'You have completed 100% of this course. Retaking restarts your progress from the first lesson; your certificate is kept.'
+      : purchaseQuote?.purchaseKind === 'RENEWAL' && purchaseQuote.completionPercentage !== null
+        ? `You have covered ${purchaseQuote.completionPercentage}% of this course, so you pay half of the remaining ${100 - purchaseQuote.completionPercentage}%.`
+        : null;
   const enrollButtonLabel = isScholarshipEnrollment
     ? `Upgrade to the full course · ${formatKoboAsNaira(courseDetails.priceInKobo)}`
     : studentEnrollmentForCourse
-      ? 'Renew access'
+      ? describePurchaseQuoteAsButtonLabel(standardPurchaseQuote, 'Renew access')
       : `Enroll · ${formatKoboAsNaira(courseDetails.priceInKobo)}`;
+  const isRetakeAvailable = standardPurchaseQuote?.purchaseKind === 'RETAKE' && !isScholarshipEnrollment;
   // The discounted price is never shown to the public. It only appears to a student who applied and was approved,
   // so a visitor browsing the catalogue only ever sees the normal price.
   const shouldShowScholarshipStatus = Boolean(myScholarshipApplicationForCourse) && !isStaffViewer && studentEnrollmentForCourse?.enrollmentType !== 'STANDARD';
@@ -133,12 +175,15 @@ export function CourseDetailPage() {
           </Link>
         )}
 
-        {(!hasUsableAccess || studentEnrollmentForCourse?.accessStatus === 'GRACE_PERIOD' || isScholarshipEnrollment) && !isStaffViewer && (
+        {(!hasUsableAccess || studentEnrollmentForCourse?.accessStatus === 'GRACE_PERIOD' || isAccessEndingSoon || isRetakeAvailable || isScholarshipEnrollment) && !isStaffViewer && (
           <button type="button" className="button button--accent button--full-width" onClick={() => startPayment(false)} disabled={isStartingPayment}>
             <LoadingButtonContent isLoading={isStartingPayment} loadingText="Redirecting to Paystack...">
               {enrollButtonLabel}
             </LoadingButtonContent>
           </button>
+        )}
+        {!isScholarshipEnrollment && !isStaffViewer && describePurchaseQuoteAsExplanation(standardPurchaseQuote) && (
+          <p className="muted-text">{describePurchaseQuoteAsExplanation(standardPurchaseQuote)}</p>
         )}
 
         {isScholarshipEnrollment && (
@@ -166,9 +211,14 @@ export function CourseDetailPage() {
             {hasApprovedScholarship && (
               <button type="button" className="button button--primary button--full-width" onClick={() => startPayment(true)} disabled={isStartingPayment}>
                 <LoadingButtonContent isLoading={isStartingPayment} loadingText="Redirecting to Paystack...">
-                  {isScholarshipEnrollment && hasUsableAccess ? 'Renew scholarship access' : `Enroll with scholarship · ${formatKoboAsNaira(myScholarshipApplicationForCourse.scholarshipPriceInKobo)}`}
+                  {isScholarshipEnrollment
+                    ? describePurchaseQuoteAsButtonLabel(scholarshipPurchaseQuote, 'Renew scholarship access')
+                    : `Enroll with scholarship · ${formatKoboAsNaira(myScholarshipApplicationForCourse.scholarshipPriceInKobo)}`}
                 </LoadingButtonContent>
               </button>
+            )}
+            {hasApprovedScholarship && isScholarshipEnrollment && describePurchaseQuoteAsExplanation(scholarshipPurchaseQuote) && (
+              <p className="muted-text">{describePurchaseQuoteAsExplanation(scholarshipPurchaseQuote)}</p>
             )}
           </div>
         )}

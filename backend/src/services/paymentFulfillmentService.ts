@@ -1,5 +1,6 @@
 import { prismaDatabaseClient } from '../database/prismaDatabaseClient';
 import { ApplicationError } from '../utilities/ApplicationError';
+import { resetStudentCourseProgressForRetake } from './courseRetakeService';
 import { grantOrRenewEnrollment } from './enrollmentAccessService';
 import { notifyStudentOfSuccessfulPayment } from './studentNotificationService';
 import { verifyPaystackTransaction } from './paystackPaymentService';
@@ -83,6 +84,9 @@ export async function fulfillPaymentByPaystackReference(paystackReference: strin
         paymentCompletedAt,
         purchasedEnrollmentType: matchingPayment.isScholarshipPayment ? 'SCHOLARSHIP' : 'STANDARD',
       });
+      if (matchingPayment.paymentKind === 'RETAKE') {
+        await resetStudentCourseProgressForRetake(databaseTransactionClient, matchingPayment.studentUserId, matchingPayment.courseId);
+      }
     }
   });
 

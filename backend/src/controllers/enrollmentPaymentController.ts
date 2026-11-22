@@ -4,6 +4,8 @@ import { prismaDatabaseClient } from '../database/prismaDatabaseClient';
 import { buildStudentCourseProgress } from '../services/courseProgressService';
 import { determineCourseAccessStatus, grantOrRenewEnrollment } from '../services/enrollmentAccessService';
 import { fulfillPaymentByPaystackReference } from '../services/paymentFulfillmentService';
+import { buildCoursePurchaseQuote } from '../services/coursePurchaseQuoteService';
+import { resetStudentCourseProgressForRetake } from '../services/courseRetakeService';
 import { calculateScholarshipPriceInKobo } from '../services/scholarshipPricingService';
 import { notifyStudentOfSuccessfulPayment } from '../services/studentNotificationService';
 import { initializePaystackTransaction, isPaystackWebhookSignatureValid } from '../services/paystackPaymentService';
@@ -52,6 +54,31 @@ async function validateScholarshipPurchaseAndGetPrice(
   return calculateScholarshipPriceInKobo(courseToPurchase.priceInKobo);
 }
 
+const purchaseQuoteQuerySchema = z.object({ isScholarshipPurchase: z.enum(['true', 'false']).optional() });
+
+/** The price (and why) a signed-in student would pay right now: first purchase, renewal by progress, or retake. */
+export const getCoursePurchaseQuote = asyncRequestHandler(async (request, response) => {
+  const authenticatedUser = request.authenticatedUser!;
+  const { isScholarshipPurchase } = purchaseQuoteQuerySchema.parse(request.query);
+  const isScholarshipQuote = isScholarshipPurchase === 'true';
+
+  const courseToQuote = await prismaDatabaseClient.course.findFirst({ where: { id: request.params.courseId, isPublished: true } });
+  if (!courseToQuote) throw new ApplicationError(404, 'Course not found or not available for purchase.', 'COURSE_NOT_FOUND');
+
+  const basePriceInKobo = isScholarshipQuote
+    ? await validateScholarshipPurchaseAndGetPrice(authenticatedUser.userId, courseToQuote)
+    : courseToQuote.priceInKobo;
+
+  const purchaseQuote = await buildCoursePurchaseQuote({
+    studentUserId: authenticatedUser.userId,
+    courseId: courseToQuote.id,
+    basePriceInKobo,
+    isScholarshipPurchase: isScholarshipQuote,
+  });
+
+  response.json({ ...purchaseQuote, fullCoursePriceInKobo: courseToQuote.priceInKobo });
+});
+
 /** Step 3 of the user journey: "Enroll & Pay (Paystack)". */
 export const initiateCoursePayment = asyncRequestHandler(async (request, response) => {
   const authenticatedUser = request.authenticatedUser!;
@@ -66,11 +93,18 @@ export const initiateCoursePayment = asyncRequestHandler(async (request, respons
   const { isScholarshipPurchase = false } = initiatePaymentRequestSchema.parse(request.body ?? {});
   const paystackReference = generatePaystackReference();
 
-  let amountToChargeInKobo = courseToPurchase.priceInKobo;
+  const basePriceInKobo = isScholarshipPurchase
+    ? await validateScholarshipPurchaseAndGetPrice(authenticatedUser.userId, courseToPurchase)
+    : courseToPurchase.priceInKobo;
 
-  if (isScholarshipPurchase) {
-    amountToChargeInKobo = await validateScholarshipPurchaseAndGetPrice(authenticatedUser.userId, courseToPurchase);
-  }
+  // First purchase = normal price. Renewal = half of what is left of the course. Retake (100% covered) = retake price.
+  const purchaseQuote = await buildCoursePurchaseQuote({
+    studentUserId: authenticatedUser.userId,
+    courseId: courseToPurchase.id,
+    basePriceInKobo,
+    isScholarshipPurchase,
+  });
+  const amountToChargeInKobo = purchaseQuote.amountInKobo;
 
   // Free course: enroll immediately, no gateway involved.
   if (amountToChargeInKobo === 0) {
@@ -83,6 +117,7 @@ export const initiateCoursePayment = asyncRequestHandler(async (request, respons
           paystackReference,
           amountInKobo: 0,
           isScholarshipPayment: isScholarshipPurchase,
+          paymentKind: purchaseQuote.purchaseKind,
           paymentStatus: 'SUCCESSFUL',
           paidAt: paymentCompletedAt,
         },
@@ -93,6 +128,9 @@ export const initiateCoursePayment = asyncRequestHandler(async (request, respons
         paymentCompletedAt,
         purchasedEnrollmentType: isScholarshipPurchase ? 'SCHOLARSHIP' : 'STANDARD',
       });
+      if (purchaseQuote.purchaseKind === 'RETAKE') {
+        await resetStudentCourseProgressForRetake(databaseTransactionClient, authenticatedUser.userId, courseToPurchase.id);
+      }
     });
     void notifyStudentOfSuccessfulPayment(paystackReference);
     return response.status(201).json({ isFreeCourseEnrollmentComplete: true, paystackReference });
@@ -105,6 +143,7 @@ export const initiateCoursePayment = asyncRequestHandler(async (request, respons
       paystackReference,
       amountInKobo: amountToChargeInKobo,
       isScholarshipPayment: isScholarshipPurchase,
+      paymentKind: purchaseQuote.purchaseKind,
       paymentStatus: 'PENDING',
     },
   });
