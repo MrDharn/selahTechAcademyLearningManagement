@@ -34,6 +34,9 @@ export function CertificatesPage() {
   return (
     <div className="page-container">
       <h1>My certificates</h1>
+      <p className="muted-text">
+        Anyone can check a certificate at <Link to="/verify">the verification page</Link> using its number.
+      </p>
       <StatusMessage messageKind="error" messageText={errorMessage} />
       {!certificates && !errorMessage && <LoadingIndicator />}
 
@@ -53,6 +56,9 @@ export function CertificatesPage() {
             <h3>{certificate.courseTitle}</h3>
             <p className="muted-text">Issued {formatCalendarDate(certificate.issuedAt)}</p>
             <p className="monospace-text">{certificate.certificateNumber}</p>
+            <Link to={`/verify/${certificate.certificateNumber}`} className="muted-text">
+              Verification link
+            </Link>
             <button type="button" className="button button--primary" onClick={() => handleDownloadClick(certificate)} disabled={courseIdBeingDownloaded !== null}>
               <LoadingButtonContent isLoading={courseIdBeingDownloaded === certificate.courseId} loadingText="Preparing PDF...">
                 Download PDF

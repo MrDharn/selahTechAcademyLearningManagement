@@ -16,6 +16,7 @@ import { PaymentCallbackPage } from './pages/PaymentCallbackPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { ScholarshipApplicationPage } from './pages/ScholarshipApplicationPage';
+import { SettingsPage } from './pages/SettingsPage';
 import { StudentDashboardPage } from './pages/StudentDashboardPage';
 import { VerifyCertificatePage } from './pages/VerifyCertificatePage';
 
@@ -55,6 +56,8 @@ export function App() {
         <Route path="/my-certificates" element={<ProtectedRoute allowedUserRoles={['STUDENT']}><CertificatesPage /></ProtectedRoute>} />
         <Route path="/learn/:courseId" element={<ProtectedRoute><LessonPlayerPage /></ProtectedRoute>} />
         <Route path="/learn/:courseId/lessons/:lessonId" element={<ProtectedRoute><LessonPlayerPage /></ProtectedRoute>} />
+
+        <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
 
         {/* Instructor studio */}
         <Route path="/instructor" element={<ProtectedRoute allowedUserRoles={['INSTRUCTOR', 'ADMIN']}><InstructorDashboardPage /></ProtectedRoute>} />

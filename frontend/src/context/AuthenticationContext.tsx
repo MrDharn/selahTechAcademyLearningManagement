@@ -8,6 +8,8 @@ interface AuthenticationContextValue {
   signInWithEmailAndPassword: (emailAddress: string, password: string) => Promise<PublicUser>;
   registerStudent: (fullName: string, emailAddress: string, password: string) => Promise<PublicUser>;
   signInWithGoogleIdToken: (googleIdToken: string) => Promise<PublicUser>;
+  /** Call after the profile changes (name, phone, picture) so the header shows the new details at once. */
+  updateCurrentUser: (updatedUser: PublicUser) => void;
   signOut: () => void;
 }
 
@@ -65,14 +67,16 @@ export function AuthenticationProvider({ children }: { children: ReactNode }) {
     [handleSuccessfulAuthentication],
   );
 
+  const updateCurrentUser = useCallback((updatedUser: PublicUser) => setCurrentUser(updatedUser), []);
+
   const signOut = useCallback(() => {
     storeAuthenticationToken(null);
     setCurrentUser(null);
   }, []);
 
   const contextValue = useMemo(
-    () => ({ currentUser, isRestoringSession, signInWithEmailAndPassword, registerStudent, signInWithGoogleIdToken, signOut }),
-    [currentUser, isRestoringSession, signInWithEmailAndPassword, registerStudent, signInWithGoogleIdToken, signOut],
+    () => ({ currentUser, isRestoringSession, signInWithEmailAndPassword, registerStudent, signInWithGoogleIdToken, updateCurrentUser, signOut }),
+    [currentUser, isRestoringSession, signInWithEmailAndPassword, registerStudent, signInWithGoogleIdToken, updateCurrentUser, signOut],
   );
 
   return <AuthenticationContext.Provider value={contextValue}>{children}</AuthenticationContext.Provider>;

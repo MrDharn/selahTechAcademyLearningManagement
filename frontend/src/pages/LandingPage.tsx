@@ -207,6 +207,9 @@ export function LandingPage() {
             </Link>
           </>
         )}
+        <Link to="/verify" className="landing-scholarship__verify-link">
+          Verify a certificate
+        </Link>
         <p className="landing-scholarship__copyright">Copyright © {new Date().getFullYear()} Selah Tech Academy</p>
       </section>
     </main>

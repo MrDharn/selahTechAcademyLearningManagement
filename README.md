@@ -149,3 +149,10 @@ An instructor (own courses) or an admin (any course) can delete a course that is
 - **Certificate verification**: public page `/verify` and `/verify/<certificate number>` (no sign-in). It shows only the holder's name, course and date. The certificate PDF now prints "Verify this certificate at <link>" under the certificate number.
 
 These changes add two columns to `enrollments` and a `password_reset_tokens` table: run `npx prisma db push` (Docker does it on start). Nothing is deleted.
+
+## Settings page and certificate verification link
+
+- **Settings** (`/settings`, click your name or picture in the header; every role): upload or remove a profile picture, edit your name and phone number, change your password (Google-only accounts can set one), and see your enrolled courses with their access status and a Renew/Open button. The picture is cropped to a square, shrunk to 256 px in the browser and stored in the database, so nobody needs a Cloudinary account for it.
+- **Verify a certificate** (public, no sign-in): `/verify` (for example http://localhost:5173/verify), linked at the bottom of the landing page and on the "My certificates" page. Each certificate also has its own link, `/verify/<certificate number>`, printed on the PDF.
+
+Needs `npx prisma db push` (adds `phoneNumber` and `profilePictureDataUrl` to users).

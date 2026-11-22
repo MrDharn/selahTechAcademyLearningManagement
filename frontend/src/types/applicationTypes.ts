@@ -11,6 +11,8 @@ export interface PublicUser {
   userRole: UserRole;
   isAccountActive: boolean;
   createdAt: string;
+  phoneNumber: string | null;
+  profilePictureDataUrl: string | null;
 }
 
 export interface AuthenticationResponse {
@@ -293,4 +295,21 @@ export interface AdminPaymentRecord {
   paymentStatus: PaymentStatus;
   paidAt: string | null;
   createdAt: string;
+}
+
+export interface EnrolledCourseSummary {
+  courseId: string;
+  courseTitle: string;
+  thumbnailImageUrl: string | null;
+  enrollmentType: 'STANDARD' | 'SCHOLARSHIP';
+  enrolledAt: string;
+  accessExpiresAt: string;
+  gracePeriodEndsAt: string;
+  courseAccessStatus: 'ACTIVE' | 'GRACE_PERIOD' | 'EXPIRED';
+}
+
+export interface MyAccountResponse {
+  user: PublicUser;
+  hasPassword: boolean;
+  enrolledCourses: EnrolledCourseSummary[];
 }

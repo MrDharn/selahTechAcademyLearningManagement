@@ -1,6 +1,7 @@
 import { useEffect, useState, type MouseEvent } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthentication } from '../context/AuthenticationContext';
+import { UserAvatar } from './UserAvatar';
 
 export function NavigationBar() {
   const { currentUser, signOut } = useAuthentication();
@@ -81,7 +82,10 @@ export function NavigationBar() {
         <div className="navigation-bar__account">
           {currentUser ? (
             <>
-              <span className="navigation-bar__user-name">{currentUser.fullName}</span>
+              <Link to="/settings" className="navigation-bar__profile-link" title="Settings">
+                <UserAvatar user={currentUser} />
+                <span className="navigation-bar__user-name">{currentUser.fullName}</span>
+              </Link>
               <span className="badge badge--neutral">{currentUser.userRole}</span>
               <button type="button" className="button button--secondary button--small" onClick={handleSignOutClick}>
                 Sign out
