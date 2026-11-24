@@ -3,16 +3,9 @@ import { environmentConfiguration } from '../configuration/environmentConfigurat
 import { prismaDatabaseClient } from '../database/prismaDatabaseClient';
 import type { CourseAccessStatus } from '../types/courseAccessStatus';
 import { ApplicationError } from '../utilities/ApplicationError';
-import { addMonthsToDate } from '../utilities/calendarDateUtilities';
+import { calculateAccessDatesAfterPayment, determineCourseAccessStatus } from '../rules/courseAccessRules';
 
-export function determineCourseAccessStatus(
-  enrollmentAccessDates: Pick<Enrollment, 'accessExpiresAt' | 'gracePeriodEndsAt'>,
-  currentDate: Date = new Date(),
-): 'ACTIVE' | 'GRACE_PERIOD' | 'EXPIRED' {
-  if (currentDate <= enrollmentAccessDates.accessExpiresAt) return 'ACTIVE';
-  if (currentDate <= enrollmentAccessDates.gracePeriodEndsAt) return 'GRACE_PERIOD';
-  return 'EXPIRED';
-}
+export { determineCourseAccessStatus };
 
 /**
  * Creates the enrollment on first payment. On a repeat payment it renews:
@@ -31,17 +24,16 @@ export async function grantOrRenewEnrollment(
     },
   });
 
-  const renewalStartingPoint =
-    existingEnrollment && existingEnrollment.accessExpiresAt > enrollmentDetails.paymentCompletedAt
-      ? existingEnrollment.accessExpiresAt
-      : enrollmentDetails.paymentCompletedAt;
-
   // A scholarship payment never downgrades a student who already owns the full course.
   const resultingEnrollmentType: EnrollmentType =
     existingEnrollment?.enrollmentType === 'STANDARD' ? 'STANDARD' : enrollmentDetails.purchasedEnrollmentType;
 
-  const newAccessExpiresAt = addMonthsToDate(renewalStartingPoint, environmentConfiguration.courseAccessDurationInMonths);
-  const newGracePeriodEndsAt = addMonthsToDate(newAccessExpiresAt, environmentConfiguration.courseAccessGracePeriodInMonths);
+  const { accessExpiresAt: newAccessExpiresAt, gracePeriodEndsAt: newGracePeriodEndsAt } = calculateAccessDatesAfterPayment({
+    existingAccessExpiresAt: existingEnrollment?.accessExpiresAt ?? null,
+    paymentCompletedAt: enrollmentDetails.paymentCompletedAt,
+    accessDurationInMonths: environmentConfiguration.courseAccessDurationInMonths,
+    gracePeriodInMonths: environmentConfiguration.courseAccessGracePeriodInMonths,
+  });
 
   return databaseTransactionClient.enrollment.upsert({
     where: {

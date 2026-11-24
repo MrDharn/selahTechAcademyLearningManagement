@@ -172,3 +172,13 @@ Needs `npx prisma db push` (adds `payments.paymentKind`).
 ## Opening and closing the scholarship program
 
 Admin dashboard > "Scholarship program" switch. While it is **closed**, the landing page button and the program page offer nothing, and new applications are refused (`SCHOLARSHIP_PROGRAM_CLOSED`). Students who were already approved can still pay, and current scholarship students can still renew. The program is open by default. Needs `npx prisma db push` (adds a small `platform_settings` table).
+
+## Automated tests and CI
+
+`cd backend && npm test` runs 28 tests (no database or internet needed) for the rules that involve money and access:
+renewal price by progress (0/20/50/80/99% covered), retake price, the scholarship discount, access status at the exact
+boundaries, how renewals add time (early vs after expiry), month-end date maths, e-mail HTML escaping and the certificate date.
+The rules live in `backend/src/rules/` (pure functions) and the tests in `backend/src/tests/`.
+
+`.github/workflows/continuous-integration.yml` runs the type-check and tests (backend) and the build (frontend) on every push
+to GitHub. It needs `package-lock.json` in both folders (created by `npm install`; commit them).
