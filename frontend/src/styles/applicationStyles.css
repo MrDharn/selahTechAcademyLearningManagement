@@ -347,3 +347,6 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--color-brand
 .enrolled-course-list__item:last-child { border-bottom: 0; }
 .enrolled-course-list__item p { margin: 0.15rem 0 0; }
 .landing-scholarship__verify-link { display: block; margin: 1rem auto 0.4rem; color: inherit; opacity: 0.85; text-decoration: underline; }
+
+.scholarship-program-switch { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.scholarship-program-switch p { margin: 0.2rem 0 0; }

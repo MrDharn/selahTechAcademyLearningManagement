@@ -168,6 +168,15 @@ enum PaymentKind {
   RETAKE     // a student who covered 100% restarts the course
 }
 
+// Small on/off switches the admin controls from the dashboard. A missing row means the default value.
+model PlatformSetting {
+  settingName  String   @id
+  isEnabled    Boolean
+  updatedAt    DateTime @updatedAt
+
+  @@map("platform_settings")
+}
+
 model Payment {
   id                  String        @id @default(uuid())
   studentUserId       String

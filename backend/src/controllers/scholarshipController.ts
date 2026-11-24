@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { prismaDatabaseClient } from '../database/prismaDatabaseClient';
+import { isScholarshipProgramOpen } from '../services/scholarshipProgramStatusService';
 import { calculateScholarshipPriceInKobo } from '../services/scholarshipPricingService';
 import { environmentConfiguration } from '../configuration/environmentConfiguration';
 import { ApplicationError } from '../utilities/ApplicationError';
@@ -14,6 +15,12 @@ const submitScholarshipApplicationRequestSchema = z.object({
 
 /** Public: the scholarship program page lists every course that offers it, with the discounted price and included sections. */
 export const listScholarshipCourses = asyncRequestHandler(async (_request, response) => {
+  // While an admin has the program closed, nothing is offered: the landing page button and the program page hide themselves.
+  if (!(await isScholarshipProgramOpen())) {
+    response.json({ isProgramOpen: false, scholarshipDiscountPercentage: environmentConfiguration.scholarshipDiscountPercentage, courses: [] });
+    return;
+  }
+
   const scholarshipEligibleCourses = await prismaDatabaseClient.course.findMany({
     where: { isPublished: true, isScholarshipAvailable: true, courseModules: { some: { isIncludedInScholarship: true } } },
     orderBy: { title: 'asc' },
@@ -21,6 +28,7 @@ export const listScholarshipCourses = asyncRequestHandler(async (_request, respo
   });
 
   response.json({
+    isProgramOpen: true,
     scholarshipDiscountPercentage: environmentConfiguration.scholarshipDiscountPercentage,
     courses: scholarshipEligibleCourses.map((course) => ({
       courseId: course.id,
@@ -37,6 +45,11 @@ export const listScholarshipCourses = asyncRequestHandler(async (_request, respo
 export const submitScholarshipApplication = asyncRequestHandler(async (request, response) => {
   const applicantUserId = request.authenticatedUser!.userId;
   const applicationDetails = submitScholarshipApplicationRequestSchema.parse(request.body);
+
+  // Closing the program stops NEW applications. Students who were already approved can still pay.
+  if (!(await isScholarshipProgramOpen())) {
+    throw new ApplicationError(403, 'The scholarship program is not accepting applications right now. Please check back later.', 'SCHOLARSHIP_PROGRAM_CLOSED');
+  }
 
   const requestedCourse = await prismaDatabaseClient.course.findFirst({
     where: {

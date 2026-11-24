@@ -16,6 +16,7 @@ export function AdminDashboardPage() {
   const [allUsers, setAllUsers] = useState<PublicUser[]>([]);
   const [recentPayments, setRecentPayments] = useState<AdminPaymentRecord[]>([]);
   const [scholarshipApplications, setScholarshipApplications] = useState<AdminScholarshipApplication[]>([]);
+  const [isScholarshipProgramOpen, setIsScholarshipProgramOpen] = useState<boolean | null>(null);
   const [reviewerNoteByApplicationId, setReviewerNoteByApplicationId] = useState<Record<string, string>>({});
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -27,12 +28,14 @@ export function AdminDashboardPage() {
 
   const loadAdminData = useCallback(async () => {
     try {
-      const [statisticsResponse, usersResponse, paymentsResponse, scholarshipApplicationsResponse] = await Promise.all([
+      const [statisticsResponse, usersResponse, paymentsResponse, scholarshipApplicationsResponse, scholarshipProgramStatus] = await Promise.all([
         sendApiRequest<PlatformStatistics>('/admin/statistics'),
         sendApiRequest<{ users: PublicUser[] }>('/admin/users'),
         sendApiRequest<{ payments: AdminPaymentRecord[] }>('/admin/payments'),
         sendApiRequest<{ applications: AdminScholarshipApplication[] }>('/admin/scholarship-applications'),
+        sendApiRequest<{ isProgramOpen: boolean }>('/admin/scholarship-program'),
       ]);
+      setIsScholarshipProgramOpen(scholarshipProgramStatus.isProgramOpen);
       setScholarshipApplications(scholarshipApplicationsResponse.applications);
       setPlatformStatistics(statisticsResponse);
       setAllUsers(usersResponse.users);
@@ -105,6 +108,31 @@ export function AdminDashboardPage() {
       </div>
 
       <h2>Scholarship applications</h2>
+      {isScholarshipProgramOpen !== null && (
+        <div className="card scholarship-program-switch">
+          <div>
+            <strong>Scholarship program: {isScholarshipProgramOpen ? 'Open' : 'Closed'}</strong>
+            <p className="muted-text">
+              {isScholarshipProgramOpen
+                ? 'Visitors see the "Apply for Scholarship" button and can apply.'
+                : 'The button is hidden and new applications are refused. Students already approved can still pay.'}
+            </p>
+          </div>
+          <button
+            type="button"
+            className={`button ${isScholarshipProgramOpen ? 'button--secondary' : 'button--primary'}`}
+            disabled={isRunningAdminAction}
+            onClick={() =>
+              void runAdminAction(
+                () => sendApiRequest('/admin/scholarship-program', { httpMethod: 'PUT', jsonBody: { isProgramOpen: !isScholarshipProgramOpen } }),
+                isScholarshipProgramOpen ? 'Scholarship program closed.' : 'Scholarship program opened.',
+              )
+            }
+          >
+            {isScholarshipProgramOpen ? 'Close program' : 'Open program'}
+          </button>
+        </div>
+      )}
       {scholarshipApplications.length === 0 && <p className="muted-text">No scholarship applications yet.</p>}
       {scholarshipApplications.map((application) => (
         <div key={application.scholarshipApplicationId} className="card">

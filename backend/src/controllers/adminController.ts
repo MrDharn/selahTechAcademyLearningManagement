@@ -3,6 +3,7 @@ import { prismaDatabaseClient } from '../database/prismaDatabaseClient';
 import { ApplicationError } from '../utilities/ApplicationError';
 import { asyncRequestHandler } from '../utilities/asyncRequestHandler';
 import { hashPlainTextPassword } from '../utilities/passwordHashingUtilities';
+import { isScholarshipProgramOpen, setScholarshipProgramOpen } from '../services/scholarshipProgramStatusService';
 import { toPublicUserRepresentation } from '../utilities/publicUserRepresentation';
 
 const userRoleSchema = z.enum(['STUDENT', 'INSTRUCTOR', 'ADMIN']);
@@ -158,4 +159,14 @@ export const listAllPayments = asyncRequestHandler(async (_request, response) =>
       createdAt: payment.createdAt,
     })),
   });
+});
+
+export const getScholarshipProgramStatus = asyncRequestHandler(async (_request, response) => {
+  response.json({ isProgramOpen: await isScholarshipProgramOpen() });
+});
+
+export const updateScholarshipProgramStatus = asyncRequestHandler(async (request, response) => {
+  const { isProgramOpen } = z.object({ isProgramOpen: z.boolean() }).parse(request.body);
+  await setScholarshipProgramOpen(isProgramOpen);
+  response.json({ isProgramOpen });
 });

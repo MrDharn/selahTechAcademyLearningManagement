@@ -90,7 +90,14 @@ export function ScholarshipApplicationPage() {
 
       {!scholarshipProgram && !errorMessage && <LoadingIndicator />}
       {scholarshipProgram?.courses.length === 0 && (
-        <StatusMessage messageKind="info" messageText="No courses are open for scholarship applications right now. Please check back soon." />
+        <StatusMessage
+          messageKind="info"
+          messageText={
+            scholarshipProgram.isProgramOpen
+              ? 'No courses are open for scholarship applications right now. Please check back soon.'
+              : 'The scholarship program is not accepting applications right now. Please check back later.'
+          }
+        />
       )}
 
       {isRestoringSession ? (

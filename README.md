@@ -168,3 +168,7 @@ A student who already has a course pays by how much of it is covered (`backend/s
 - The course page asks `GET /api/payments/courses/:courseId/quote`, and starting the payment uses the same function, so the price shown is always the price charged.
 
 Needs `npx prisma db push` (adds `payments.paymentKind`).
+
+## Opening and closing the scholarship program
+
+Admin dashboard > "Scholarship program" switch. While it is **closed**, the landing page button and the program page offer nothing, and new applications are refused (`SCHOLARSHIP_PROGRAM_CLOSED`). Students who were already approved can still pay, and current scholarship students can still renew. The program is open by default. Needs `npx prisma db push` (adds a small `platform_settings` table).

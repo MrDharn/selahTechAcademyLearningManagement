@@ -2,10 +2,12 @@ import { Router } from 'express';
 import {
   createUserAccountWithRole,
   getPlatformStatistics,
+  getScholarshipProgramStatus,
   listAllPayments,
   listAllUsers,
   listScholarshipApplications,
   reviewScholarshipApplication,
+  updateScholarshipProgramStatus,
   updateUserAccount,
 } from '../controllers/adminController';
 import { requireAuthentication } from '../middleware/authenticationMiddleware';
@@ -20,5 +22,7 @@ adminRoutes.get('/users', listAllUsers);
 adminRoutes.post('/users', createUserAccountWithRole);
 adminRoutes.patch('/users/:userId', updateUserAccount);
 adminRoutes.get('/payments', listAllPayments);
+adminRoutes.get('/scholarship-program', getScholarshipProgramStatus);
+adminRoutes.put('/scholarship-program', updateScholarshipProgramStatus);
 adminRoutes.get('/scholarship-applications', listScholarshipApplications);
 adminRoutes.patch('/scholarship-applications/:scholarshipApplicationId', reviewScholarshipApplication);

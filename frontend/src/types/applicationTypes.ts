@@ -71,6 +71,8 @@ export interface ScholarshipCourseOffer {
 }
 
 export interface ScholarshipProgramResponse {
+  /** False while an admin has closed the program; then `courses` is empty. */
+  isProgramOpen: boolean;
   scholarshipDiscountPercentage: number;
   courses: ScholarshipCourseOffer[];
 }
