@@ -1,4 +1,5 @@
 import { randomBytes } from 'crypto';
+import PDFDocument from 'pdfkit';
 import { z } from 'zod';
 import { prismaDatabaseClient } from '../database/prismaDatabaseClient';
 import { buildStudentCourseProgress } from '../services/courseProgressService';
@@ -11,6 +12,7 @@ import { notifyStudentOfSuccessfulPayment } from '../services/studentNotificatio
 import { initializePaystackTransaction, isPaystackWebhookSignatureValid } from '../services/paystackPaymentService';
 import { ApplicationError } from '../utilities/ApplicationError';
 import { asyncRequestHandler } from '../utilities/asyncRequestHandler';
+import { drawPaymentReceipt } from '../services/paymentReceiptPdfRenderer';
 
 const initiatePaymentRequestSchema = z.object({ isScholarshipPurchase: z.boolean().optional() }).default({});
 
@@ -261,9 +263,41 @@ export const listMyPayments = asyncRequestHandler(async (request, response) => {
       paystackReference: payment.paystackReference,
       amountInKobo: payment.amountInKobo,
       isScholarshipPayment: payment.isScholarshipPayment,
+      paymentKind: payment.paymentKind,
       paymentStatus: payment.paymentStatus,
       paidAt: payment.paidAt,
       createdAt: payment.createdAt,
     })),
   });
+});
+
+/** The signed-in student's own receipt for a SUCCESSFUL payment, as a PDF. */
+export const downloadPaymentReceipt = asyncRequestHandler(async (request, response) => {
+  const authenticatedUserId = request.authenticatedUser!.userId;
+
+  const paymentToReceipt = await prismaDatabaseClient.payment.findFirst({
+    where: { paystackReference: request.params.paystackReference, studentUserId: authenticatedUserId },
+    include: { course: { select: { title: true } }, studentUser: { select: { fullName: true, emailAddress: true } } },
+  });
+  if (!paymentToReceipt || paymentToReceipt.paymentStatus !== 'SUCCESSFUL' || !paymentToReceipt.paidAt) {
+    throw new ApplicationError(404, 'No receipt is available for this payment. Receipts exist only for successful payments.', 'RECEIPT_NOT_AVAILABLE');
+  }
+
+  const receiptDocument = new PDFDocument({ size: 'A4', margin: 0 });
+  response.setHeader('Content-Type', 'application/pdf');
+  response.setHeader('Content-Disposition', `attachment; filename="receipt-${paymentToReceipt.paystackReference}.pdf"`);
+  receiptDocument.pipe(response);
+
+  drawPaymentReceipt(receiptDocument, {
+    receiptNumber: paymentToReceipt.paystackReference,
+    paidAt: paymentToReceipt.paidAt,
+    studentFullName: paymentToReceipt.studentUser.fullName,
+    studentEmailAddress: paymentToReceipt.studentUser.emailAddress,
+    courseTitle: paymentToReceipt.course.title,
+    paymentKind: paymentToReceipt.paymentKind,
+    isScholarshipPayment: paymentToReceipt.isScholarshipPayment,
+    amountInKobo: paymentToReceipt.amountInKobo,
+  });
+
+  receiptDocument.end();
 });

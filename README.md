@@ -182,3 +182,25 @@ The rules live in `backend/src/rules/` (pure functions) and the tests in `backen
 
 `.github/workflows/continuous-integration.yml` runs the type-check and tests (backend) and the build (frontend) on every push
 to GitHub. It needs `package-lock.json` in both folders (created by `npm install`; commit them).
+
+## Migrations and backups
+
+### Backups (do this before anything risky, and regularly once you have real students)
+- **Without Docker** (needs the PostgreSQL client tools, i.e. `pg_dump`, which come with PostgreSQL): `cd backend && npm run db:backup`. It writes `backups/selahtech-<date>.dump` (the `backups/` folder is git-ignored) and keeps the newest 14 (`BACKUP_KEEP_COUNT` changes that). A failed backup leaves no half-written file.
+- **With Docker**: `docker compose exec -T postgres_database sh -c 'pg_dump -U "$POSTGRES_USER" -Fc "$POSTGRES_DB"' > backups/selahtech-manual.dump`
+- **Restore** (this REPLACES the current data, so it refuses to run without `--yes`): `cd backend && npm run db:restore -- ../backups/<file>.dump --yes`. With Docker: `docker compose exec -T postgres_database sh -c 'pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --clean --if-exists --no-owner' < backups/<file>.dump`
+- A backup on the same computer does not protect you from losing that computer: copy the file to another place (Google Drive, another machine) as well. On a server, run `npm run db:backup` from cron every night.
+
+### Moving from `prisma db push` to migrations (once)
+`db push` is fine while building, but it cannot record what changed or be reviewed. Migrations can. Your current database keeps all its data; nothing below deletes anything.
+1. `npm run db:backup`
+2. `cd backend && npm run db:migrations:baseline` (writes `prisma/migrations/0_baseline/migration.sql` from the current schema; does not touch the database)
+3. `npx prisma migrate resolve --applied 0_baseline` (tells Prisma "these tables already exist")
+4. From now on, after editing `prisma/schema.prisma`: `npx prisma migrate dev --name what_you_changed`. Commit the new folder under `prisma/migrations/`.
+5. On a server: `npx prisma migrate deploy`.
+
+Docker uses `migrate deploy` automatically as soon as the `prisma/migrations` folder exists (otherwise it keeps using `db push`). For a brand-new empty database, `migrate deploy` builds everything from the baseline. If you ever run it on an old database before step 3, it stops with an error and changes nothing.
+
+## Payment receipts
+
+On the student's "My learning" page, every successful payment in **Payment history** has a **Receipt** button that downloads a PDF (receipt number = the Paystack reference, date, name, course, what it was for: enrollment / scholarship enrollment / renewal / retake, amount, "Paid"). `GET /api/payments/receipts/:paystackReference` returns it only to the student who made the payment, and only for successful payments. The layout is in `backend/src/services/paymentReceiptPdfRenderer.ts`. No database change.

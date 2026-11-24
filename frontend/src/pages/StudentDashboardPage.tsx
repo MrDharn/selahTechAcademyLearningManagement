@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CourseThumbnail } from '../components/CourseThumbnail';
+import { LoadingButtonContent } from '../components/LoadingButtonContent';
 import { LoadingIndicator } from '../components/LoadingIndicator';
 import { ProgressBar } from '../components/ProgressBar';
 import { StatusMessage } from '../components/StatusMessage';
-import { extractErrorMessage, sendApiRequest } from '../services/applicationProgrammingInterfaceClient';
+import { downloadAuthenticatedFile, extractErrorMessage, sendApiRequest } from '../services/applicationProgrammingInterfaceClient';
 import type { EnrollmentSummary, PaymentStatus } from '../types/applicationTypes';
 import { formatCalendarDate, formatKoboAsNaira } from '../utilities/formattingUtilities';
 
@@ -27,6 +28,7 @@ export function StudentDashboardPage() {
   const [enrollments, setEnrollments] = useState<EnrollmentSummary[] | null>(null);
   const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryEntry[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [referenceOfReceiptBeingDownloaded, setReferenceOfReceiptBeingDownloaded] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -39,6 +41,18 @@ export function StudentDashboardPage() {
       })
       .catch((loadError) => setErrorMessage(extractErrorMessage(loadError)));
   }, []);
+
+  const handleDownloadReceipt = async (paystackReference: string) => {
+    setErrorMessage(null);
+    setReferenceOfReceiptBeingDownloaded(paystackReference);
+    try {
+      await downloadAuthenticatedFile(`/payments/receipts/${encodeURIComponent(paystackReference)}`, `receipt-${paystackReference}.pdf`);
+    } catch (downloadError) {
+      setErrorMessage(extractErrorMessage(downloadError));
+    } finally {
+      setReferenceOfReceiptBeingDownloaded(null);
+    }
+  };
 
   return (
     <div className="page-container">
@@ -110,6 +124,7 @@ export function StudentDashboardPage() {
                   <th>Amount</th>
                   <th>Status</th>
                   <th>Reference</th>
+                  <th>Receipt</th>
                 </tr>
               </thead>
               <tbody>
@@ -120,6 +135,20 @@ export function StudentDashboardPage() {
                     <td>{formatKoboAsNaira(payment.amountInKobo)}</td>
                     <td>{payment.paymentStatus}</td>
                     <td className="monospace-text">{payment.paystackReference}</td>
+                    <td>
+                      {payment.paymentStatus === 'SUCCESSFUL' && (
+                        <button
+                          type="button"
+                          className="button button--secondary button--small"
+                          disabled={referenceOfReceiptBeingDownloaded !== null}
+                          onClick={() => void handleDownloadReceipt(payment.paystackReference)}
+                        >
+                          <LoadingButtonContent isLoading={referenceOfReceiptBeingDownloaded === payment.paystackReference} loadingText="Preparing receipt">
+                            Receipt
+                          </LoadingButtonContent>
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

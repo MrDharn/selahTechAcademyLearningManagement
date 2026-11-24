@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import {
+  downloadPaymentReceipt,
   getCoursePurchaseQuote,
   handlePaystackWebhook,
   initiateCoursePayment,
@@ -18,4 +19,5 @@ enrollmentPaymentRoutes.get('/courses/:courseId/quote', requireAuthentication, g
 enrollmentPaymentRoutes.post('/courses/:courseId/initialize', requireAuthentication, initiateCoursePayment);
 enrollmentPaymentRoutes.get('/verify/:paystackReference', requireAuthentication, verifyCoursePayment);
 enrollmentPaymentRoutes.get('/me', requireAuthentication, listMyPayments);
+enrollmentPaymentRoutes.get('/receipts/:paystackReference', requireAuthentication, downloadPaymentReceipt);
 enrollmentPaymentRoutes.get('/enrollments/me', requireAuthentication, listMyEnrollments);
