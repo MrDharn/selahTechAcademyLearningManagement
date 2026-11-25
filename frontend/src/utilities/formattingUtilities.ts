@@ -18,3 +18,9 @@ export function formatDurationInMinutesAndSeconds(totalSeconds: number | null): 
   const remainingSeconds = totalSeconds % 60;
   return `${wholeMinutes}:${String(remainingSeconds).padStart(2, '0')}`;
 }
+
+export function formatFileSize(fileSizeInBytes: number): string {
+  if (fileSizeInBytes < 1024) return `${fileSizeInBytes} B`;
+  if (fileSizeInBytes < 1024 * 1024) return `${Math.round(fileSizeInBytes / 1024)} KB`;
+  return `${(fileSizeInBytes / (1024 * 1024)).toFixed(1)} MB`;
+}

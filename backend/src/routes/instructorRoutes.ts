@@ -26,6 +26,17 @@ import {
   updateCourseModule,
   updateLesson,
 } from '../controllers/courseManagementController';
+import {
+  answerLessonQuestion,
+  deleteLessonQuestionAsInstructor,
+  listCourseQuestionsForInstructor,
+} from '../controllers/lessonDiscussionController';
+import {
+  createLessonResourceUploadSignature,
+  deleteLessonResource,
+  listLessonResourcesForInstructor,
+  registerUploadedLessonResource,
+} from '../controllers/lessonResourceController';
 import { requireAuthentication } from '../middleware/authenticationMiddleware';
 import { requireUserRole } from '../middleware/roleBasedAccessControlMiddleware';
 
@@ -62,6 +73,17 @@ instructorRoutes.delete('/lessons/:lessonId', deleteLesson);
 // Lesson video (direct browser -> Cloudinary upload using a signature from us)
 instructorRoutes.post('/lessons/:lessonId/video-upload-signature', createLessonVideoUploadSignature);
 instructorRoutes.put('/lessons/:lessonId/video', attachUploadedVideoToLesson);
+
+// Lesson files (direct browser -> the course owner's Cloudinary, stored privately)
+instructorRoutes.get('/lessons/:lessonId/resources', listLessonResourcesForInstructor);
+instructorRoutes.post('/lessons/:lessonId/resources/upload-signature', createLessonResourceUploadSignature);
+instructorRoutes.post('/lessons/:lessonId/resources', registerUploadedLessonResource);
+instructorRoutes.delete('/lessons/:lessonId/resources/:resourceId', deleteLessonResource);
+
+// Student questions
+instructorRoutes.get('/courses/:courseId/questions', listCourseQuestionsForInstructor);
+instructorRoutes.post('/questions/:questionId/answers', answerLessonQuestion);
+instructorRoutes.delete('/questions/:questionId', deleteLessonQuestionAsInstructor);
 
 // Assessments
 instructorRoutes.get('/lessons/:lessonId/assessment', getLessonAssessmentForInstructor);

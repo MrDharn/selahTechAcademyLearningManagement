@@ -3,6 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AssessmentEditor } from '../components/AssessmentEditor';
 import { WorkingNotice } from '../components/WorkingNotice';
 import { CourseThumbnailUploader } from '../components/CourseThumbnailUploader';
+import { CourseQuestionsPanel } from '../components/CourseQuestionsPanel';
+import { LessonResourcesEditor } from '../components/LessonResourcesEditor';
 import { LessonVideoUploader } from '../components/LessonVideoUploader';
 import { LoadingIndicator } from '../components/LoadingIndicator';
 import { StatusMessage } from '../components/StatusMessage';
@@ -27,6 +29,7 @@ export function InstructorCourseEditorPage() {
   const [newModuleTitle, setNewModuleTitle] = useState('');
   const [newLessonTitleByModuleId, setNewLessonTitleByModuleId] = useState<Record<string, string>>({});
   const [lessonIdWithOpenQuizEditor, setLessonIdWithOpenQuizEditor] = useState<string | null>(null);
+  const [lessonIdWithOpenFiles, setLessonIdWithOpenFiles] = useState<string | null>(null);
 
   const loadCourse = useCallback(async () => {
     try {
@@ -263,12 +266,20 @@ export function InstructorCourseEditorPage() {
                   >
                     {lessonIdWithOpenQuizEditor === lesson.id ? 'Close quiz' : lesson.assessment ? 'Edit quiz' : 'Add quiz'}
                   </button>
+                  <button
+                    type="button"
+                    className="button button--secondary button--small"
+                    onClick={() => setLessonIdWithOpenFiles(lessonIdWithOpenFiles === lesson.id ? null : lesson.id)}
+                  >
+                    {lessonIdWithOpenFiles === lesson.id ? 'Close files' : 'Files'}
+                  </button>
                   <button type="button" className="button button--danger button--small" onClick={() => handleDeleteLesson(lesson.id)}>
                     Delete
                   </button>
                 </div>
               </div>
 
+              {lessonIdWithOpenFiles === lesson.id && <LessonResourcesEditor lessonId={lesson.id} onResourcesChanged={() => undefined} />}
               {lessonIdWithOpenQuizEditor === lesson.id && <AssessmentEditor lessonId={lesson.id} onAssessmentChanged={loadCourse} />}
             </div>
           ))}
@@ -294,6 +305,8 @@ export function InstructorCourseEditorPage() {
           + Add module
         </button>
       </form>
+
+      {courseId && <CourseQuestionsPanel courseId={courseId} />}
     </div>
   );
 }

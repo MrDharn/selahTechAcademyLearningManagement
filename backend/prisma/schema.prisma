@@ -61,6 +61,8 @@ model User {
   scholarshipApplications     ScholarshipApplication[]
   passwordResetTokens         PasswordResetToken[]
   courseReviews               CourseReview[]
+  lessonQuestions             LessonQuestion[]
+  lessonAnswers               LessonAnswer[]
 
   @@map("users")
 }
@@ -140,6 +142,8 @@ model Lesson {
   courseModule   CourseModule     @relation(fields: [courseModuleId], references: [id], onDelete: Cascade)
   assessment     Assessment?
   progressRecords LessonProgress[]
+  resources      LessonResource[]
+  questions      LessonQuestion[]
 
   @@index([courseModuleId, sequenceOrderNumber])
   @@map("lessons")
@@ -342,4 +346,50 @@ model CourseReview {
   @@unique([courseId, studentUserId])
   @@index([courseId])
   @@map("course_reviews")
+}
+
+// A downloadable file attached to a lesson (slides, PDF notes, source code...). Stored privately in the course owner's Cloudinary.
+model LessonResource {
+  id                 String   @id @default(uuid())
+  lessonId           String
+  displayName        String
+  originalFileName   String
+  cloudinaryPublicId String
+  fileSizeInBytes    Int
+  createdAt          DateTime @default(now())
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId])
+  @@map("lesson_resources")
+}
+
+// Questions are visible to the students of the course; instructors answer them.
+model LessonQuestion {
+  id            String   @id @default(uuid())
+  lessonId      String
+  askedByUserId String
+  questionText  String
+  createdAt     DateTime @default(now())
+
+  lesson      Lesson         @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  askedByUser User           @relation(fields: [askedByUserId], references: [id], onDelete: Cascade)
+  answers     LessonAnswer[]
+
+  @@index([lessonId, createdAt])
+  @@map("lesson_questions")
+}
+
+model LessonAnswer {
+  id               String   @id @default(uuid())
+  questionId       String
+  answeredByUserId String
+  answerText       String
+  createdAt        DateTime @default(now())
+
+  question        LessonQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answeredByUser  User           @relation(fields: [answeredByUserId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+  @@map("lesson_answers")
 }

@@ -349,3 +349,30 @@ export interface CoursePurchaseQuote {
   fullCoursePriceInKobo: number;
   completionPercentage: number | null;
 }
+
+export interface LessonResourceSummary {
+  resourceId: string;
+  displayName: string;
+  originalFileName: string;
+  fileSizeInBytes: number;
+  createdAt: string;
+}
+
+export interface LessonAnswerItem {
+  answerId: string;
+  answerText: string;
+  answeredByDisplayName: string;
+  isFromInstructor: boolean;
+  createdAt: string;
+}
+
+export interface LessonQuestionItem {
+  questionId: string;
+  questionText: string;
+  askedByDisplayName: string;
+  createdAt: string;
+  canDelete: boolean;
+  answers: LessonAnswerItem[];
+  /** Only present in the instructor's course-wide list. */
+  lessonTitle?: string;
+}

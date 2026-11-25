@@ -118,3 +118,57 @@ export function createAuthorizedHlsStreamingUrl(credentials: InstructorCloudinar
     format: 'm3u8',
   });
 }
+
+/**
+ * Lesson files (slides, PDFs...) are uploaded as "raw" files of type "authenticated": a plain URL does not work,
+ * only a URL signed by our backend does, and we only sign it for students who pass the lesson access guards.
+ */
+export function createSignedLessonResourceUploadParameters(credentials: InstructorCloudinaryCredentials, destinationFolderPath: string) {
+  const uploadTimestampInSeconds = Math.round(Date.now() / 1000);
+
+  const parametersIncludedInSignature = {
+    timestamp: uploadTimestampInSeconds,
+    folder: destinationFolderPath,
+    type: 'authenticated',
+    use_filename: 'true',
+    unique_filename: 'true',
+  };
+
+  const uploadSignature = cloudinaryClient.utils.api_sign_request(parametersIncludedInSignature, credentials.cloudinaryApiSecret);
+
+  return {
+    uploadUrl: `https://api.cloudinary.com/v1_1/${credentials.cloudinaryCloudName}/raw/upload`,
+    cloudinaryApiKey: credentials.cloudinaryApiKey,
+    uploadSignature,
+    signedFormFields: parametersIncludedInSignature,
+  };
+}
+
+/** Signed download link for a private lesson file; it forces the browser to download instead of opening. */
+export function createAuthorizedResourceDownloadUrl(credentials: InstructorCloudinaryCredentials, cloudinaryPublicId: string): string {
+  return cloudinaryClient.url(cloudinaryPublicId, {
+    cloud_name: credentials.cloudinaryCloudName,
+    api_key: credentials.cloudinaryApiKey,
+    api_secret: credentials.cloudinaryApiSecret,
+    resource_type: 'raw',
+    type: 'authenticated',
+    sign_url: true,
+    secure: true,
+    flags: 'attachment',
+  });
+}
+
+/** Best effort: a leftover file in the instructor's own Cloudinary is harmless, so failures are ignored. */
+export async function deleteLessonResourceFromCloudinary(credentials: InstructorCloudinaryCredentials, cloudinaryPublicId: string) {
+  try {
+    await cloudinaryClient.uploader.destroy(cloudinaryPublicId, {
+      cloud_name: credentials.cloudinaryCloudName,
+      api_key: credentials.cloudinaryApiKey,
+      api_secret: credentials.cloudinaryApiSecret,
+      resource_type: 'raw',
+      type: 'authenticated',
+    });
+  } catch {
+    /* ignore */
+  }
+}

@@ -212,3 +212,11 @@ On the student's "My learning" page, every successful payment in **Payment histo
 - **Reviews**: a student who is enrolled in a course can leave one 1–5 star rating with an optional comment, edit it, or delete it. Reviewer names show as "First L.". Ratings appear on course cards and the course page.
 - **Database change**: adds `courses.category` and the `course_reviews` table. Run `npx prisma db push` (or your migration flow) after unzipping, then restart the backend.
 - Tests: `npm test` now includes `courseRatingRules.test.ts` (average, distribution, name format, sort order).
+
+## Lesson files and Q&A
+
+- **Lesson files**: in the course editor each lesson has a **Files** button. The instructor adds slides, PDFs, notes or source code (pdf, doc/docx, ppt/pptx, xls/xlsx, csv, txt, md, zip, png, jpg; max 25 MB). Files go straight from the browser to the instructor's own Cloudinary and are stored **privately**: the server only signs a download link for students who pass the same access checks as the lesson video.
+- **Questions & answers**: under each lesson video, students ask questions (visible to classmates, shown as "First L."). Instructors answer from the **Student questions** panel at the bottom of the course editor (unanswered questions first). Students can delete their own questions; instructors can delete any. A student can ask at most 10 questions per hour.
+- **Database change**: adds `lesson_resources`, `lesson_questions` and `lesson_answers`. Run `npx prisma db push` in `backend` and restart.
+- Tests: `lessonResourceRules.test.ts` and `lessonQuestionRules.test.ts`.
+- Not tested here (no network in my sandbox): the real Cloudinary upload and signed download. Try one upload and one download after unzipping.

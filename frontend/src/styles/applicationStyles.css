@@ -371,3 +371,14 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--color-brand
 .rating-distribution__fill { height: 100%; background: #f5a623; }
 .review-card { margin-top: 0.75rem; }
 .review-card__header { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
+
+/* ---- Lesson files and Q&A ---- */
+.lesson-resources, .lesson-questions { margin-top: 2rem; }
+.resource-list { list-style: none; margin: 0.5rem 0; padding: 0; display: grid; gap: 0.5rem; }
+.resource-list__item { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; padding: 0.6rem 0.8rem; border: 1px solid #eaecf0; border-radius: 8px; background: #fff; }
+.resource-editor { margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed #d0d5dd; }
+.question-card { margin-top: 0.75rem; padding: 0.75rem 0; border-top: 1px solid #eaecf0; }
+.card.question-card { padding: 1rem; border-top: none; }
+.question-card__text { white-space: pre-wrap; margin: 0.4rem 0; }
+.answer-block { margin: 0.5rem 0 0 1rem; padding: 0.5rem 0.75rem; border-left: 3px solid #d0d5dd; background: #f9fafb; border-radius: 0 8px 8px 0; }
+.answer-block--instructor { border-left-color: #12b76a; background: #ecfdf3; }

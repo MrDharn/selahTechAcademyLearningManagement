@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AssessmentPanel } from '../components/AssessmentPanel';
 import { HlsVideoPlayer } from '../components/HlsVideoPlayer';
+import { LessonQuestionsPanel } from '../components/LessonQuestionsPanel';
+import { LessonResourcesList } from '../components/LessonResourcesList';
 import { LoadingButtonContent } from '../components/LoadingButtonContent';
 import { LoadingIndicator } from '../components/LoadingIndicator';
 import { ProgressBar } from '../components/ProgressBar';
@@ -196,11 +198,14 @@ export function LessonPlayerPage() {
               )
             )}
 
+            <LessonResourcesList lessonId={lessonStream.lessonId} />
+
             {selectedLessonProgress.isCompleted && nextLesson?.isUnlocked && (
               <Link to={`/learn/${courseId}/lessons/${nextLesson.lessonId}`} className="button button--accent">
                 Next lesson: {nextLesson.lessonTitle} →
               </Link>
             )}
+            <LessonQuestionsPanel lessonId={lessonStream.lessonId} />
           </>
         )}
       </main>
