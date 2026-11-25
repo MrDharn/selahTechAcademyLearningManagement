@@ -220,3 +220,9 @@ On the student's "My learning" page, every successful payment in **Payment histo
 - **Database change**: adds `lesson_resources`, `lesson_questions` and `lesson_answers`. Run `npx prisma db push` in `backend` and restart.
 - Tests: `lessonResourceRules.test.ts` and `lessonQuestionRules.test.ts`.
 - Not tested here (no network in my sandbox): the real Cloudinary upload and signed download. Try one upload and one download after unzipping.
+
+### Question notifications (e-mail)
+
+- When a student posts a question, the **course instructor gets an e-mail** with the question and a button that opens the course editor's **Student questions** panel. When an instructor answers, the **student gets an e-mail** with the answer and a link to the lesson.
+- These use the same SMTP settings as the other e-mails (`SMTP_HOST` etc.). With `SMTP_HOST` empty nothing is sent, and a mail failure never blocks posting.
+- WhatsApp is not included: it needs the paid WhatsApp Business API (Meta, or a provider such as Twilio) plus approved message templates. It can be added later next to the e-mail, using the same two hook points in `lessonDiscussionNotificationService.ts`.

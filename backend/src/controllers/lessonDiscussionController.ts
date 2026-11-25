@@ -9,6 +9,7 @@ import {
   normalizeDiscussionText,
   orderQuestionsForInstructor,
 } from '../rules/lessonQuestionRules';
+import { notifyInstructorAboutNewQuestion, notifyStudentAboutAnswer } from '../services/lessonDiscussionNotificationService';
 import { ApplicationError } from '../utilities/ApplicationError';
 import { asyncRequestHandler } from '../utilities/asyncRequestHandler';
 
@@ -74,6 +75,7 @@ export const askLessonQuestion = asyncRequestHandler(async (request, response) =
   const createdQuestion = await prismaDatabaseClient.lessonQuestion.create({
     data: { lessonId: request.params.lessonId, askedByUserId, questionText },
   });
+  void notifyInstructorAboutNewQuestion(createdQuestion.id);
   response.status(201).json({ questionId: createdQuestion.id });
 });
 
@@ -131,6 +133,7 @@ export const answerLessonQuestion = asyncRequestHandler(async (request, response
   const createdAnswer = await prismaDatabaseClient.lessonAnswer.create({
     data: { questionId: question.id, answeredByUserId: request.authenticatedUser!.userId, answerText },
   });
+  void notifyStudentAboutAnswer(createdAnswer.id);
   response.status(201).json({ answerId: createdAnswer.id });
 });
 

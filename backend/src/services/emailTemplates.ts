@@ -176,3 +176,60 @@ export function buildAccessReminderEmail(details: {
       `\n\nRenew here: ${details.renewalPageUrl}\n`,
   };
 }
+
+function shortenForEmail(longText: string, maximumCharacters = 300): string {
+  return longText.length <= maximumCharacters ? longText : `${longText.slice(0, maximumCharacters - 1).trimEnd()}…`;
+}
+
+/** To the instructor: a student asked a question; the button opens the course editor where it can be answered. */
+export function buildNewQuestionEmail(details: {
+  recipientEmailAddress: string;
+  instructorFullName: string;
+  studentDisplayName: string;
+  courseTitle: string;
+  lessonTitle: string;
+  questionText: string;
+  answerPageUrl: string;
+}): OutgoingEmail {
+  const questionPreview = shortenForEmail(details.questionText);
+  const bodyHtml =
+    `<p>Hi ${escapeHtml(details.instructorFullName)},</p>` +
+    `<p><strong>${escapeHtml(details.studentDisplayName)}</strong> asked a question in <strong>${escapeHtml(details.courseTitle)}</strong>, lesson “${escapeHtml(details.lessonTitle)}”:</p>` +
+    `<blockquote style="margin:16px 0;padding:12px 16px;border-left:4px solid ${BRAND_BLUE_COLOUR};background:#f1f5f9;white-space:pre-wrap;">${escapeHtml(questionPreview)}</blockquote>` +
+    `<p>Open the course page and scroll to <strong>Student questions</strong> to answer. The student is e-mailed when you reply.</p>`;
+
+  return {
+    recipientEmailAddress: details.recipientEmailAddress,
+    subject: `New question in ${details.courseTitle}`,
+    htmlBody: wrapInEmailLayout('A student asked a question', bodyHtml, 'Answer the question', details.answerPageUrl),
+    plainTextBody:
+      `Hi ${details.instructorFullName},\n\n${details.studentDisplayName} asked a question in "${details.courseTitle}", lesson "${details.lessonTitle}":\n\n` +
+      `${questionPreview}\n\nAnswer it here: ${details.answerPageUrl}\n`,
+  };
+}
+
+/** To the student: their question got an answer; the button opens the lesson. */
+export function buildQuestionAnsweredEmail(details: {
+  recipientEmailAddress: string;
+  studentFullName: string;
+  courseTitle: string;
+  lessonTitle: string;
+  questionText: string;
+  answerText: string;
+  lessonPageUrl: string;
+}): OutgoingEmail {
+  const answerPreview = shortenForEmail(details.answerText, 500);
+  const bodyHtml =
+    `<p>Hi ${escapeHtml(details.studentFullName)},</p>` +
+    `<p>Your question in <strong>${escapeHtml(details.courseTitle)}</strong>, lesson “${escapeHtml(details.lessonTitle)}”, has an answer.</p>` +
+    `<p style="color:#6b7a8c;white-space:pre-wrap;">You asked: ${escapeHtml(shortenForEmail(details.questionText, 200))}</p>` +
+    `<blockquote style="margin:16px 0;padding:12px 16px;border-left:4px solid #12b76a;background:#ecfdf3;white-space:pre-wrap;">${escapeHtml(answerPreview)}</blockquote>`;
+
+  return {
+    recipientEmailAddress: details.recipientEmailAddress,
+    subject: `Your question was answered: ${details.courseTitle}`,
+    htmlBody: wrapInEmailLayout('Your question was answered', bodyHtml, 'Open the lesson', details.lessonPageUrl),
+    plainTextBody:
+      `Hi ${details.studentFullName},\n\nYour question in "${details.courseTitle}" (${details.lessonTitle}) was answered:\n\n${answerPreview}\n\nOpen the lesson: ${details.lessonPageUrl}\n`,
+  };
+}
