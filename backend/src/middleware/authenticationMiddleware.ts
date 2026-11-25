@@ -35,3 +35,16 @@ export async function requireAuthentication(request: Request, _response: Respons
     nextMiddlewareFunction(authenticationError);
   }
 }
+
+/** Like requireAuthentication, but anonymous visitors are allowed through (request.authenticatedUser stays undefined). */
+export async function attachAuthenticatedUserIfPresent(request: Request, response: Response, nextMiddlewareFunction: NextFunction) {
+  if (!request.headers.authorization) {
+    nextMiddlewareFunction();
+    return;
+  }
+  await requireAuthentication(request, response, (possibleError?: unknown) => {
+    // An expired or invalid token on a public page is treated as "not signed in".
+    void possibleError;
+    nextMiddlewareFunction();
+  });
+}

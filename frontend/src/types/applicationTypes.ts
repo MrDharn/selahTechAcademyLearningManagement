@@ -31,10 +31,31 @@ export interface CourseSummary {
   title: string;
   description: string;
   priceInKobo: number;
+  category: string;
   thumbnailImageUrl: string | null;
   instructorFullName: string;
   moduleCount: number;
   lessonCount: number;
+  averageRating: number | null;
+  reviewCount: number;
+}
+
+export type CourseSortKey = 'newest' | 'price_low_to_high' | 'price_high_to_low' | 'top_rated' | 'most_popular';
+
+export interface CourseReview {
+  reviewId: string;
+  reviewerDisplayName: string;
+  ratingOutOfFive: number;
+  reviewText: string | null;
+  createdAt: string;
+  isMyReview: boolean;
+}
+
+export interface CourseReviewsResponse {
+  averageRating: number | null;
+  reviewCount: number;
+  ratingDistribution: number[];
+  reviews: CourseReview[];
 }
 
 export interface CourseOutlineLesson {
@@ -56,6 +77,9 @@ export interface CourseDetails {
   description: string;
   priceInKobo: number;
   thumbnailImageUrl: string | null;
+  category: string;
+  averageRating: number | null;
+  reviewCount: number;
   instructorFullName: string;
   modules: CourseOutlineModule[];
 }
@@ -240,6 +264,7 @@ export interface EditableCourse {
   description: string;
   priceInKobo: number;
   thumbnailImageUrl: string | null;
+  category: string;
   isPublished: boolean;
   isScholarshipAvailable: boolean;
   courseModules: EditableCourseModule[];

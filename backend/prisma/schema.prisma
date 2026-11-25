@@ -60,6 +60,7 @@ model User {
   certificates                Certificate[]
   scholarshipApplications     ScholarshipApplication[]
   passwordResetTokens         PasswordResetToken[]
+  courseReviews               CourseReview[]
 
   @@map("users")
 }
@@ -87,6 +88,7 @@ model Course {
   description       String
   priceInKobo       Int
   thumbnailImageUrl String?
+  category          String   @default("General")
   isPublished       Boolean  @default(false)
   // When true, students can apply for the scholarship price (see SCHOLARSHIP_DISCOUNT_PERCENTAGE).
   isScholarshipAvailable Boolean @default(true)
@@ -99,8 +101,10 @@ model Course {
   payments       Payment[]
   certificates   Certificate[]
   scholarshipApplications ScholarshipApplication[]
+  reviews        CourseReview[]
 
   @@index([instructorUserId])
+  @@index([category])
   @@map("courses")
 }
 
@@ -320,4 +324,22 @@ model PasswordResetToken {
 
   @@index([userId])
   @@map("password_reset_tokens")
+}
+
+// One review per student per course (a student can edit theirs). Only enrolled students may review.
+model CourseReview {
+  id              String   @id @default(uuid())
+  courseId        String
+  studentUserId   String
+  ratingOutOfFive Int
+  reviewText      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  course      Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  studentUser User   @relation(fields: [studentUserId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, studentUserId])
+  @@index([courseId])
+  @@map("course_reviews")
 }

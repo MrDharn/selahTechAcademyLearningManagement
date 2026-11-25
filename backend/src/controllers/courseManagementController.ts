@@ -12,6 +12,7 @@ const createCourseRequestSchema = z.object({
   title: z.string().trim().min(3),
   description: z.string().trim().min(10),
   priceInKobo: z.number().int().min(0),
+  category: z.string().trim().min(2).max(40).default('General'),
 });
 
 const updateCourseRequestSchema = createCourseRequestSchema

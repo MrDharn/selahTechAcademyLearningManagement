@@ -8,6 +8,7 @@ import { useAuthentication } from '../context/AuthenticationContext';
 import { extractErrorMessage, sendApiRequest } from '../services/applicationProgrammingInterfaceClient';
 import type { CloudinaryAccountSummary, ManagedCourseSummary } from '../types/applicationTypes';
 import { convertNairaToKobo, formatKoboAsNaira } from '../utilities/formattingUtilities';
+import { SUGGESTED_COURSE_CATEGORIES } from '../utilities/courseCategoryUtilities';
 
 export function InstructorDashboardPage() {
   const { currentUser } = useAuthentication();
@@ -22,6 +23,7 @@ export function InstructorDashboardPage() {
   const [newCourseTitle, setNewCourseTitle] = useState('');
   const [newCourseDescription, setNewCourseDescription] = useState('');
   const [newCoursePriceInNaira, setNewCoursePriceInNaira] = useState(0);
+  const [newCourseCategory, setNewCourseCategory] = useState('General');
   const [isCreatingCourse, setIsCreatingCourse] = useState(false);
 
   const loadDashboardData = useCallback(async () => {
@@ -48,7 +50,7 @@ export function InstructorDashboardPage() {
     try {
       const { course } = await sendApiRequest<{ course: { id: string } }>('/instructor/courses', {
         httpMethod: 'POST',
-        jsonBody: { title: newCourseTitle, description: newCourseDescription, priceInKobo: convertNairaToKobo(newCoursePriceInNaira) },
+        jsonBody: { title: newCourseTitle, description: newCourseDescription, category: newCourseCategory, priceInKobo: convertNairaToKobo(newCoursePriceInNaira) },
       });
       navigateToPage(`/instructor/courses/${course.id}`);
     } catch (createError) {
@@ -145,6 +147,15 @@ export function InstructorDashboardPage() {
             <label className="form-field">
               <span>Description</span>
               <textarea value={newCourseDescription} onChange={(changeEvent) => setNewCourseDescription(changeEvent.target.value)} required minLength={10} rows={3} />
+            </label>
+            <label className="form-field">
+              <span>Category</span>
+              <input list="course-category-suggestions" value={newCourseCategory} onChange={(changeEvent) => setNewCourseCategory(changeEvent.target.value)} required minLength={2} maxLength={40} />
+              <datalist id="course-category-suggestions">
+                {SUGGESTED_COURSE_CATEGORIES.map((suggestedCategory) => (
+                  <option key={suggestedCategory} value={suggestedCategory} />
+                ))}
+              </datalist>
             </label>
             <label className="form-field">
               <span>Price in Naira (0 = free)</span>

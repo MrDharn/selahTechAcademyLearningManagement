@@ -204,3 +204,11 @@ Docker uses `migrate deploy` automatically as soon as the `prisma/migrations` fo
 ## Payment receipts
 
 On the student's "My learning" page, every successful payment in **Payment history** has a **Receipt** button that downloads a PDF (receipt number = the Paystack reference, date, name, course, what it was for: enrollment / scholarship enrollment / renewal / retake, amount, "Paid"). `GET /api/payments/receipts/:paystackReference` returns it only to the student who made the payment, and only for successful payments. The layout is in `backend/src/services/paymentReceiptPdfRenderer.ts`. No database change.
+
+## Course search, categories and reviews
+
+- **Search and filter** (`GET /api/courses?search=&category=&sort=`): the catalogue page has a search box (title, description, category, instructor), a category filter and a sort menu (newest, most popular, top rated, price low/high).
+- **Categories**: instructors choose a category when creating or editing a course (free text, suggestions provided). Existing courses become "General".
+- **Reviews**: a student who is enrolled in a course can leave one 1–5 star rating with an optional comment, edit it, or delete it. Reviewer names show as "First L.". Ratings appear on course cards and the course page.
+- **Database change**: adds `courses.category` and the `course_reviews` table. Run `npx prisma db push` (or your migration flow) after unzipping, then restart the backend.
+- Tests: `npm test` now includes `courseRatingRules.test.ts` (average, distribution, name format, sort order).

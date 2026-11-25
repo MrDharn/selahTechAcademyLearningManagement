@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { CourseReviewsSection } from '../components/CourseReviewsSection';
 import { CourseThumbnail } from '../components/CourseThumbnail';
+import { StarRatingDisplay } from '../components/StarRating';
 import { LoadingButtonContent } from '../components/LoadingButtonContent';
 import { LoadingIndicator } from '../components/LoadingIndicator';
 import { StatusMessage } from '../components/StatusMessage';
@@ -22,11 +24,15 @@ export function CourseDetailPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isStartingPayment, setIsStartingPayment] = useState(false);
 
-  useEffect(() => {
+  const loadCourseDetails = useCallback(() => {
     sendApiRequest<{ course: CourseDetails }>(`/courses/${courseId}`)
       .then((detailsResponse) => setCourseDetails(detailsResponse.course))
       .catch((loadError) => setErrorMessage(extractErrorMessage(loadError)));
   }, [courseId]);
+
+  useEffect(() => {
+    loadCourseDetails();
+  }, [loadCourseDetails]);
 
   useEffect(() => {
     if (currentUser?.userRole !== 'STUDENT') return;
@@ -133,7 +139,10 @@ export function CourseDetailPage() {
       <div>
         <CourseThumbnail courseTitle={courseDetails.title} thumbnailImageUrl={courseDetails.thumbnailImageUrl} sizeVariant="banner" />
         <h1>{courseDetails.title}</h1>
-        <p className="muted-text">Taught by {courseDetails.instructorFullName}</p>
+        <p className="muted-text">
+          <span className="category-badge">{courseDetails.category}</span> Taught by {courseDetails.instructorFullName}
+        </p>
+        <StarRatingDisplay averageRating={courseDetails.averageRating} reviewCount={courseDetails.reviewCount} />
         <p className="course-detail-description">{courseDetails.description}</p>
 
         <h2>Course content</h2>
@@ -150,6 +159,8 @@ export function CourseDetailPage() {
             </ul>
           </div>
         ))}
+
+        <CourseReviewsSection courseId={courseDetails.courseId} canWriteReview={Boolean(studentEnrollmentForCourse)} onReviewsChanged={loadCourseDetails} />
       </div>
 
       <aside className="card enrollment-panel">

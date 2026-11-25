@@ -9,6 +9,7 @@ import { StatusMessage } from '../components/StatusMessage';
 import { extractErrorMessage, sendApiRequest } from '../services/applicationProgrammingInterfaceClient';
 import type { EditableCourse } from '../types/applicationTypes';
 import { convertNairaToKobo, formatDurationInMinutesAndSeconds } from '../utilities/formattingUtilities';
+import { SUGGESTED_COURSE_CATEGORIES } from '../utilities/courseCategoryUtilities';
 
 export function InstructorCourseEditorPage() {
   const { courseId } = useParams();
@@ -21,6 +22,7 @@ export function InstructorCourseEditorPage() {
   const [courseTitleDraft, setCourseTitleDraft] = useState('');
   const [courseDescriptionDraft, setCourseDescriptionDraft] = useState('');
   const [coursePriceInNairaDraft, setCoursePriceInNairaDraft] = useState(0);
+  const [courseCategoryDraft, setCourseCategoryDraft] = useState('General');
 
   const [newModuleTitle, setNewModuleTitle] = useState('');
   const [newLessonTitleByModuleId, setNewLessonTitleByModuleId] = useState<Record<string, string>>({});
@@ -33,6 +35,7 @@ export function InstructorCourseEditorPage() {
       setCourseTitleDraft(course.title);
       setCourseDescriptionDraft(course.description);
       setCoursePriceInNairaDraft(course.priceInKobo / 100);
+      setCourseCategoryDraft(course.category);
     } catch (loadError) {
       setErrorMessage(extractErrorMessage(loadError));
     }
@@ -65,7 +68,7 @@ export function InstructorCourseEditorPage() {
       () =>
         sendApiRequest(`/instructor/courses/${courseId}`, {
           httpMethod: 'PATCH',
-          jsonBody: { title: courseTitleDraft, description: courseDescriptionDraft, priceInKobo: convertNairaToKobo(coursePriceInNairaDraft) },
+          jsonBody: { title: courseTitleDraft, description: courseDescriptionDraft, category: courseCategoryDraft, priceInKobo: convertNairaToKobo(coursePriceInNairaDraft) },
         }),
       'Course details saved.',
     );
@@ -166,6 +169,15 @@ export function InstructorCourseEditorPage() {
         <label className="form-field">
           <span>Description</span>
           <textarea value={courseDescriptionDraft} onChange={(changeEvent) => setCourseDescriptionDraft(changeEvent.target.value)} rows={3} required />
+        </label>
+        <label className="form-field">
+          <span>Category</span>
+          <input list="course-category-suggestions" value={courseCategoryDraft} onChange={(changeEvent) => setCourseCategoryDraft(changeEvent.target.value)} required minLength={2} maxLength={40} />
+          <datalist id="course-category-suggestions">
+            {SUGGESTED_COURSE_CATEGORIES.map((suggestedCategory) => (
+              <option key={suggestedCategory} value={suggestedCategory} />
+            ))}
+          </datalist>
         </label>
         <label className="form-field">
           <span>Price in Naira (0 = free)</span>

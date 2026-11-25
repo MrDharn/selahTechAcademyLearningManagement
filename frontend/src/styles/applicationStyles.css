@@ -350,3 +350,24 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--color-brand
 
 .scholarship-program-switch { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
 .scholarship-program-switch p { margin: 0.2rem 0 0; }
+
+/* ---- Course search, categories and reviews ---- */
+.catalog-filters { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; margin: 1.25rem 0; }
+.catalog-filters__search { flex: 1 1 260px; min-width: 200px; }
+.catalog-filters select, .catalog-filters input { padding: 0.6rem 0.75rem; border: 1px solid #d0d5dd; border-radius: 8px; font: inherit; background: #fff; }
+.category-badge { display: inline-block; padding: 0.1rem 0.6rem; margin-right: 0.4rem; border-radius: 999px; background: #eef2ff; color: #3730a3; font-size: 0.75rem; font-weight: 600; }
+.star-rating-display { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.9rem; }
+.star-rating-display__stars { color: #f5a623; letter-spacing: 1px; }
+.star-rating-display__empty { color: #d0d5dd; }
+.star-rating-input { display: flex; gap: 0.15rem; }
+.star-rating-input__star { background: none; border: none; padding: 0; font-size: 2rem; line-height: 1; color: #d0d5dd; cursor: pointer; }
+.star-rating-input__star--filled { color: #f5a623; }
+.star-rating-input__star:focus-visible { outline: 2px solid #3730a3; border-radius: 4px; }
+.course-reviews { margin-top: 2rem; }
+.course-reviews__summary { display: flex; gap: 2rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+.rating-distribution { flex: 1 1 220px; max-width: 320px; }
+.rating-distribution__row { display: grid; grid-template-columns: 2rem 1fr 2rem; gap: 0.5rem; align-items: center; font-size: 0.8rem; }
+.rating-distribution__track { height: 8px; background: #eaecf0; border-radius: 999px; overflow: hidden; }
+.rating-distribution__fill { height: 100%; background: #f5a623; }
+.review-card { margin-top: 0.75rem; }
+.review-card__header { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
